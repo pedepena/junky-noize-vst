@@ -1,0 +1,57 @@
+name: Compilar Junky Noize
+
+# Se ejecuta solo cada vez que subes cambios a GitHub, y tambien a mano
+# desde la pestana "Actions" > "Compilar Junky Noize" > "Run workflow".
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            artifact: JunkyNoize-Windows
+          - name: macOS
+            os: macos-latest
+            artifact: JunkyNoize-macOS
+          - name: Linux
+            os: ubuntu-latest
+            artifact: JunkyNoize-Linux
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar librerias de Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libx11-dev libxcomposite-dev libxcursor-dev \
+            libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libfreetype-dev \
+            libfontconfig1-dev libgl1-mesa-dev
+
+      - name: Configurar
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          else
+            cmake -B build -DCMAKE_BUILD_TYPE=Release
+          fi
+
+      - name: Compilar
+        run: cmake --build build --config Release --parallel
+
+      - name: Subir el resultado
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: build/JunkyNoize_artefacts/Release
+          if-no-files-found: error
