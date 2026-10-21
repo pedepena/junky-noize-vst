@@ -42,6 +42,8 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     // Mono / Stereo: dos botones que se excluyen entre si
     monoButton.onClick = [this] { audioProcessor.setParameterPlain (junky::params::mono, 1.0f); };
     stereoButton.onClick = [this] { audioProcessor.setParameterPlain (junky::params::mono, 0.0f); };
+    monoButton.setToggleState (false, juce::dontSendNotification);
+    stereoButton.setToggleState (true, juce::dontSendNotification);
     addAndMakeVisible (monoButton);
     addAndMakeVisible (stereoButton);
 

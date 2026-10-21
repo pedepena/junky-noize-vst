@@ -1,61 +1,46 @@
 # Junky Noize
 
-Plugin de audio (efecto) que imitara el sonido, la calidez y las texturas de varias maquinas de sampleo
-clasicas (MPC, S900/S950, SP-1200, SP-404, Emulator, Ensoniq...). Funciona en cualquier DAW,
-en Windows, Mac y Linux, y con cualquier controlador MIDI.
+Efecto de audio VST3 (y AU en macOS) con controles de entrada/salida, mezcla, filtro, realce de graves, mono/estéreo, A/B y presets. Los modelos de máquinas de sampleo están previstos para una fase posterior; todavía no forman parte del motor de audio.
 
-Estado actual: **fase 1** (esqueleto + interfaz). Ya hay interfaz completa y controles funcionando
-(IN/OUT, MIX, FILTER, BASS BOOST 20-500 Hz, MONO/STEREO, A/B, presets), pero **todavia no estan los
-modelos de las maquinas**: llegan en la fase 2.
+## Descargar e instalar
 
-## Como obtener el plugin compilado (sin instalar nada)
+Los archivos instalables se publican en **Releases** de GitHub cuando se crea una versión con una etiqueta `v*` (por ejemplo, `v0.1.0`). Descarga el archivo correspondiente a tu sistema operativo:
 
-El plugin se compila automaticamente en la nube con GitHub, para Windows, Mac y Linux a la vez.
+- **Windows x64**: ejecuta `JunkyNoize-Setup-<version>-Windows-x64.exe` y sigue el asistente. El instalador copia el plugin a `C:\Program Files\Common Files\VST3\Junky Noize.vst3` y permite desinstalarlo desde Aplicaciones instaladas.
+- **macOS universal**: descomprime el ZIP. Copia `VST3/Junky Noize.vst3` a `~/Library/Audio/Plug-Ins/VST3/`. Opcionalmente, copia `AU/Junky Noize.component` a `~/Library/Audio/Plug-Ins/Components/` para instalar el formato AU.
+- **Linux x64**: descomprime el TAR.GZ y copia `VST3/Junky Noize.vst3` a `~/.vst3/`.
 
-1. Crea una cuenta gratuita en https://github.com
-2. Crea un repositorio nuevo (boton **New**), ponle de nombre `JunkyNoize`, **privado** si quieres.
-3. En la pagina del repositorio pulsa **uploading an existing file** y arrastra **todo el contenido**
-   de esta carpeta (incluida la carpeta oculta `.github`). Pulsa **Commit changes**.
-4. Ve a la pestana **Actions**. Veras tres tareas ("Windows", "macOS", "Linux") trabajando.
-   Tardan unos 10-20 minutos la primera vez.
-5. Cuando terminen (circulo verde), entra en la ejecucion y abajo, en **Artifacts**, descarga el de tu sistema.
-6. Dentro encontraras la carpeta `VST3` (el plugin) y `Standalone` (un programa para probarlo sin DAW).
+Crea la carpeta de destino si no existe y vuelve a escanear plugins en tu DAW. En FL Studio: **Options > Manage plugins > Find installed plugins**. En macOS, si Gatekeeper bloquea el plugin, permite su apertura desde **Ajustes del Sistema > Privacidad y seguridad**.
 
-## Como instalar el VST3
+### Probar una compilación antes de una Release
 
-- **Windows**: copia la carpeta `Junky Noize.vst3` a `C:\Program Files\Common Files\VST3`
-- **Mac**: copia `Junky Noize.vst3` a `/Library/Audio/Plug-Ins/VST3` (y `Junky Noize.component` a `/Library/Audio/Plug-Ins/Components` si usas AU)
-- **Linux**: copia `Junky Noize.vst3` a `~/.vst3`
+Cada ejecución correcta del flujo **Compilar Junky Noize** publica instaladores y paquetes temporales en la sección **Actions > ejecución > Artifacts**. Los archivos de **Releases** aparecen al publicar una etiqueta `v*`.
 
-Despues abre tu DAW y vuelve a escanear los plugins (en FL Studio: *Options > Manage plugins > Find installed plugins*).
+## Compilar desde el código fuente
 
-> En Mac, como el plugin no esta firmado, el sistema puede bloquearlo la primera vez:
-> *Ajustes del Sistema > Privacidad y seguridad > Permitir de todos modos*.
+Se requiere CMake 3.22 o superior y una cadena de herramientas C++ compatible. JUCE 8.0.8 se descarga automáticamente al configurar el proyecto. GitHub Actions compila Windows, macOS universal y Linux al subir cambios o solicitar una ejecución manual desde **Actions**.
 
-## Estructura del proyecto
+```sh
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --parallel
+```
+
+Para publicar instaladores: crea y sube una etiqueta versionada (por ejemplo, `v0.1.0`). Al terminar la compilación de las tres plataformas, GitHub crea una Release con los archivos listos para descargar.
+
+## Estructura
 
 ```
 JunkyNoize/
-├── CMakeLists.txt            Receta de compilacion (descarga JUCE automaticamente)
-├── .github/workflows/        Compilacion automatica para Windows, Mac y Linux
+├── CMakeLists.txt
+├── .github/workflows/build.yml
+├── packaging/
+│   ├── package-unix.sh
+│   └── windows/JunkyNoize.iss
 └── Source/
-    ├── PluginProcessor.h/.cpp   El "cerebro": procesa el audio
-    ├── PluginEditor.h/.cpp      La ventana del plugin
-    ├── Parameters.h             Lista de controles (IN, OUT, MIX, FILTER...)
-    ├── Presets.h                Lista de presets
-    ├── dsp/                     Todo lo relacionado con el sonido
-    │   └── Biquad.h             Filtro basico
-    └── ui/                      Todo lo relacionado con el aspecto
-        ├── Theme.h              Colores y tipos de letra
-        ├── Chassis.h/.cpp       Fondo metalico, tornillos, logo y etiquetas
-        ├── KnobLookAndFeel.*    Aspecto de los knobs
-        ├── PanelButton.h        Botones y flechas
-        ├── LcdDisplay.*         Pantalla verde de presets
-        └── LevelMeter.h         Medidores de nivel
+    ├── PluginProcessor.h/.cpp
+    ├── PluginEditor.h/.cpp
+    ├── Parameters.h
+    ├── Presets.h
+    ├── dsp/
+    └── ui/
 ```
-
-## Siguientes fases
-
-2. Motor de sonido compartido (bits, frecuencia de muestreo, filtros, saturacion, ruido) y primeras maquinas de referencia.
-3. Resto de maquinas, agrupadas por familias.
-4. Pulido: presets finales, instaladores, MIDI Learn en la version Standalone.

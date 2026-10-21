@@ -46,7 +46,6 @@ void LcdDisplay::paint (juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
 
-    // Fondo verde con un poco de degradado, como una pantalla LCD retroiluminada
     juce::ColourGradient background (theme::lcdBackground.brighter (0.12f), bounds.getCentreX(), bounds.getY(),
                                      theme::lcdBackground.darker (0.15f), bounds.getCentreX(), bounds.getBottom(), false);
     g.setGradientFill (background);
@@ -60,14 +59,13 @@ void LcdDisplay::paint (juce::Graphics& g)
     const float fontSize = rowHeight * 0.72f;
     const float padding = bounds.getWidth() * 0.025f;
 
-    // Cabecera
+    // Matriz de pixeles fija: la fuente no depende del sistema operativo.
     g.setColour (theme::lcdText);
-    g.setFont (theme::monoFont (fontSize));
-    g.drawText ("PRESET SELECT", juce::Rectangle<float> (padding * 2.0f, 0.0f, bounds.getWidth(), headerHeight),
-                juce::Justification::centredLeft);
+    theme::drawBitmapText (g, "PRESET SELECT",
+                           juce::Rectangle<float> (padding * 2.0f, 0.0f,
+                                                   bounds.getWidth() - padding * 4.0f, headerHeight), fontSize);
     g.fillRect (padding, headerHeight - 2.0f, bounds.getWidth() - padding * 2.0f, 2.0f);
 
-    // Barra de desplazamiento a la derecha
     const float scrollWidth = bounds.getWidth() * 0.05f;
     const juce::Rectangle<float> track (bounds.getRight() - scrollWidth - padding, headerHeight + 4.0f,
                                         scrollWidth, bounds.getHeight() - headerHeight - 8.0f);
@@ -80,11 +78,9 @@ void LcdDisplay::paint (juce::Graphics& g)
     const float thumbY = track.getY() + track.getHeight() * (float) offset / total;
     g.fillRect (track.getX(), thumbY, track.getWidth(), thumbHeight);
 
-    // Filas
     for (int row = 0; row < visibleRows; ++row)
     {
         const int index = offset + row;
-
         if (index >= items.size())
             break;
 
@@ -98,16 +94,16 @@ void LcdDisplay::paint (juce::Graphics& g)
             g.fillRect (rowBounds.withTrimmedLeft (rowHeight * 0.9f));
 
             juce::Path marker;
-            const float m = rowHeight * 0.28f;
-            marker.addTriangle (rowBounds.getX() + m * 0.5f, rowBounds.getCentreY() - m,
-                                rowBounds.getX() + m * 0.5f, rowBounds.getCentreY() + m,
-                                rowBounds.getX() + m * 2.2f, rowBounds.getCentreY());
+            const float markerSize = rowHeight * 0.28f;
+            marker.addTriangle (rowBounds.getX() + markerSize * 0.5f, rowBounds.getCentreY() - markerSize,
+                                rowBounds.getX() + markerSize * 0.5f, rowBounds.getCentreY() + markerSize,
+                                rowBounds.getX() + markerSize * 2.2f, rowBounds.getCentreY());
             g.fillPath (marker);
         }
 
         g.setColour (isSelected ? theme::lcdBackground : theme::lcdText);
-        g.drawText (juce::String (index + 1).paddedLeft ('0', 2) + "  " + items[index],
-                    rowBounds.withTrimmedLeft (rowHeight * 1.0f), juce::Justification::centredLeft);
+        theme::drawBitmapText (g, juce::String (index + 1).paddedLeft ('0', 2) + "  " + items[index],
+                               rowBounds.withTrimmedLeft (rowHeight * 1.0f), fontSize);
     }
 }
 

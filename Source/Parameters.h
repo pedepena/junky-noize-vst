@@ -22,14 +22,16 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
 
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
+    // Mantiene el rango -24..+12 dB, pero centra el recorrido visual en 0 dB.
+    juce::NormalisableRange<float> gainRange (-24.0f, 12.0f, 0.1f);
+    gainRange.setSkewForCentre (0.0f);
+
     layout.add (std::make_unique<juce::AudioParameterFloat> (
-        juce::ParameterID { input, 1 }, "Input",
-        juce::NormalisableRange<float> (-24.0f, 12.0f, 0.1f), 0.0f,
+        juce::ParameterID { input, 1 }, "Input", gainRange, 0.0f,
         Attr().withStringFromValueFunction (dbText)));
 
     layout.add (std::make_unique<juce::AudioParameterFloat> (
-        juce::ParameterID { output, 1 }, "Output",
-        juce::NormalisableRange<float> (-24.0f, 12.0f, 0.1f), 0.0f,
+        juce::ParameterID { output, 1 }, "Output", gainRange, 0.0f,
         Attr().withStringFromValueFunction (dbText)));
 
     layout.add (std::make_unique<juce::AudioParameterFloat> (

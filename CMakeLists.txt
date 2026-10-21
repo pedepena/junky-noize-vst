@@ -14,6 +14,8 @@ FetchContent_Declare(
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(JUCE)
 
+juce_add_binary_data(JunkyNoizeAssets SOURCES Source/ui/assets/JunkyNoizeReference.jpg)
+
 # Formatos de plugin: VST3 en todos los sistemas, AU solo en Mac,
 # y una version Standalone (programa independiente) para probarlo sin DAW.
 set(JUNKY_FORMATS VST3 Standalone)
@@ -51,6 +53,7 @@ target_compile_definitions(JunkyNoize PUBLIC
 
 target_link_libraries(JunkyNoize
     PRIVATE
+        JunkyNoizeAssets
         juce::juce_audio_utils
         juce::juce_dsp
     PUBLIC

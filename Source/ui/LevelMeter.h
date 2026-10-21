@@ -50,21 +50,6 @@ public:
             g.fillRect (seg);
         }
 
-        // Escala de dB a la derecha
-        g.setColour (theme::ink);
-        g.setFont (theme::boldFont (bounds.getHeight() * 0.11f));
-
-        const float labelsDb[] = { 0.0f, -6.0f, -12.0f, -18.0f, -24.0f };
-
-        for (float db : labelsDb)
-        {
-            const float t = (db - bottomDb) / (topDb - bottomDb);
-            const float y = barArea.getBottom() - 3.0f - t * (barArea.getHeight() - 6.0f);
-            g.drawText (juce::String ((int) db),
-                        juce::Rectangle<float> (bounds.getX() + 4.0f, y - bounds.getHeight() * 0.06f,
-                                                bounds.getWidth() - 4.0f, bounds.getHeight() * 0.12f),
-                        juce::Justification::centredLeft);
-        }
     }
 
 private:

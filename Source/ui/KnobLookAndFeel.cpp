@@ -13,6 +13,14 @@ void KnobLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
     const float capRadius = outerRadius * 0.70f;
     const float angle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
 
+    // Disco opaco sobre el arte de fondo: evita agujas y escalas estáticas bajo el control.
+    juce::ColourGradient panel (juce::Colour (0xffb8b8b1), centre.x, centre.y - outerRadius,
+                                juce::Colour (0xff92938e), centre.x, centre.y + outerRadius, false);
+    g.setGradientFill (panel);
+    g.fillEllipse (centre.x - outerRadius, centre.y - outerRadius, outerRadius * 2.0f, outerRadius * 2.0f);
+    g.setColour (juce::Colour (0xff262726).withAlpha (0.85f));
+    g.drawEllipse (centre.x - outerRadius, centre.y - outerRadius, outerRadius * 2.0f, outerRadius * 2.0f, 2.0f);
+
     // Marcas alrededor del knob (11 marcas repartidas por el recorrido)
     g.setColour (theme::ink.withAlpha (0.85f));
     const int numTicks = 11;

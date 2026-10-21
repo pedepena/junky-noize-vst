@@ -31,10 +31,10 @@ private:
 
     juce::Slider filterKnob, mixKnob, bassFreqKnob, inputKnob, outputKnob;
 
-    junky::PanelButton abButton { junky::PanelButton::Style::key, junky::theme::ledRed, false };
-    junky::PanelButton bassButton { junky::PanelButton::Style::key, junky::theme::ledRed, true };
-    junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, true };
-    junky::PanelButton stereoButton { junky::PanelButton::Style::key, junky::theme::ledGreen, true };
+    junky::PanelButton abButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledRed, false };
+    junky::PanelButton bassButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
+    junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
+    junky::PanelButton stereoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
     junky::PanelButton presetUpButton { junky::PanelButton::Style::arrowUp };
     junky::PanelButton presetDownButton { junky::PanelButton::Style::arrowDown };
 
