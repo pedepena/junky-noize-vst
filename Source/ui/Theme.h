@@ -22,7 +22,7 @@ inline const juce::Colour lcdText { 0xff17240f };
 inline const juce::Colour ledRed { 0xffff3b2f };
 inline const juce::Colour ledGreen { 0xff62e06a };
 
-inline std::array<std::uint8_t, 7> bitmapGlyph (juce_wchar character)
+inline std::array<std::uint8_t, 7> bitmapGlyph (juce::juce_wchar character)
 {
     using Rows = std::array<std::uint8_t, 7>;
     switch (character)
