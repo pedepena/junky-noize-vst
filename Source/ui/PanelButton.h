@@ -68,7 +68,7 @@ public:
             else
                 arrow.addTriangle (c.x, c.y + size, c.x - size, c.y - size * 0.7f, c.x + size, c.y - size * 0.7f);
 
-            g.setColour (juce::Colour (0xffbfc3bd));
+            g.setColour (theme::ink.withAlpha (0.9f));
             g.fillPath (arrow);
         }
     }

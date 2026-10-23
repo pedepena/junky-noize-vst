@@ -6,6 +6,11 @@
 #include "Parameters.h"
 #include "Presets.h"
 #include "dsp/Biquad.h"
+#include "dsp/BitCrusher.h"
+#include "dsp/DrunkDelay.h"
+#include "dsp/NoiseSource.h"
+#include "dsp/RateReducer.h"
+#include "dsp/Saturator.h"
 
 class JunkyNoizeAudioProcessor : public juce::AudioProcessor
 {
@@ -63,12 +68,28 @@ private:
     std::atomic<float>* bassBoostParam = nullptr;
     std::atomic<float>* bassFreqParam = nullptr;
     std::atomic<float>* monoParam = nullptr;
+    std::atomic<float>* driveParam = nullptr;
+    std::atomic<float>* bitsParam = nullptr;
+    std::atomic<float>* rateParam = nullptr;
+    std::atomic<float>* aliasParam = nullptr;
+    std::atomic<float>* noiseParam = nullptr;
+    std::atomic<float>* drunkParam = nullptr;
+    std::atomic<float>* characterParam = nullptr;
 
     juce::SmoothedValue<float> inputGain, outputGain, mixAmount;
+    juce::SmoothedValue<float> driveAmount, noiseGain, drunkAmount;
 
-    junky::Biquad lowPass, highShelf, bassShelf;
+    junky::Biquad lowPass, highShelf, bassShelf, aliasLowPass;
+    junky::Biquad machineLowPass, machineLowShelf, machineHighShelf;
+    junky::RateReducer rateReducer;
+    junky::NoiseSource noiseSource;
+    junky::DrunkDelay drunkDelay;
     bool lowPassOn = false, highShelfOn = false, bassOn = false;
+    bool aliasLowPassOn = false;
+    bool rateReducerOn = false;
     double currentSampleRate = 44100.0;
+    float lastFilterValue = 999.0f, lastBassHz = -1.0f;
+    float lastRateValue = -1.0f, lastAliasValue = -1.0f;
 
     std::atomic<int> currentPreset { 0 };
     std::atomic<int> activeSlot { 0 };
