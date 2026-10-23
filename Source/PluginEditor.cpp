@@ -69,6 +69,12 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     presetDownButton.onClick = [this] { lcd.setSelected (lcd.getSelected() + 1); audioProcessor.selectPreset (lcd.getSelected()); };
     addAndMakeVisible (presetUpButton);
     addAndMakeVisible (presetDownButton);
+    saveTestButton.onClick = [this]
+    {
+        const int slot = audioProcessor.saveCustomPreset();
+        lcd.setHeader (slot >= 0 ? "SAVED TO CUSTOM " + juce::String (slot + 1) : "SELECT A CUSTOM SLOT", slot >= 0 ? 1200 : 1500);
+    };
+    addAndMakeVisible (saveTestButton);
 
     addAndMakeVisible (inputMeter);
     addAndMakeVisible (outputMeter);
@@ -135,6 +141,7 @@ void JunkyNoizeAudioProcessorEditor::resized()
     lcd.setBounds (fromDesign (340, 55, 420, 215));
     presetUpButton.setBounds (fromDesign (787, 70, 78, 85));
     presetDownButton.setBounds (fromDesign (787, 165, 78, 85));
+    saveTestButton.setBounds (fromDesign (560, 1000, 190, 58));
 
     filterKnob.setBounds (fromDesign (192, 443, 170, 170));
     mixKnob.setBounds (fromDesign (390, 327, 300, 300));

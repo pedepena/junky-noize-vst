@@ -3,6 +3,12 @@
 
 namespace junky
 {
+void LcdDisplay::setHeader (const juce::String& text, int durationMs)
+{
+    header = text; repaint();
+    if (durationMs > 0) startTimer (durationMs); else stopTimer();
+}
+void LcdDisplay::timerCallback() { stopTimer(); header = "PRESET SELECT"; repaint(); }
 void LcdDisplay::setItems (const juce::StringArray& newItems)
 {
     items = newItems;
@@ -61,7 +67,7 @@ void LcdDisplay::paint (juce::Graphics& g)
 
     // Matriz de pixeles fija: la fuente no depende del sistema operativo.
     g.setColour (theme::lcdText);
-    theme::drawBitmapText (g, "PRESET SELECT",
+    theme::drawBitmapText (g, header,
                            juce::Rectangle<float> (padding * 2.0f, 0.0f,
                                                    bounds.getWidth() - padding * 4.0f, headerHeight), fontSize);
     g.fillRect (padding, headerHeight - 2.0f, bounds.getWidth() - padding * 2.0f, 2.0f);
@@ -102,7 +108,7 @@ void LcdDisplay::paint (juce::Graphics& g)
         }
 
         g.setColour (isSelected ? theme::lcdBackground : theme::lcdText);
-        theme::drawBitmapText (g, juce::String (index + 1).paddedLeft ('0', 2) + "  " + items[index],
+        theme::drawBitmapText (g, juce::String (index).paddedLeft ('0', 2) + "  " + items[index],
                                rowBounds.withTrimmedLeft (rowHeight * 1.0f), fontSize);
     }
 }

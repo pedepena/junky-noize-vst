@@ -6,7 +6,7 @@
 namespace junky
 {
 /** Pantalla verde estilo LCD con la lista de presets. */
-class LcdDisplay : public juce::Component
+class LcdDisplay : public juce::Component, private juce::Timer
 {
 public:
     std::function<void (int)> onSelect;
@@ -14,6 +14,7 @@ public:
     void setItems (const juce::StringArray& newItems);
     void setSelected (int index);
     int getSelected() const { return selected; }
+    void setHeader (const juce::String& text, int durationMs = 0);
 
     void paint (juce::Graphics& g) override;
     void mouseDown (const juce::MouseEvent& e) override;
@@ -28,5 +29,7 @@ private:
     juce::StringArray items;
     int selected = 0;
     int offset = 0;
+    juce::String header { "PRESET SELECT" };
+    void timerCallback() override;
 };
 } // namespace junky
