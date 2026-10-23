@@ -40,6 +40,7 @@ private:
 
     junky::LcdDisplay lcd;
     junky::LevelMeter inputMeter, outputMeter;
+    juce::TextButton saveTestButton { "SAVE TEST" };
 
     float inputDisplayDb = -100.0f;
     float outputDisplayDb = -100.0f;

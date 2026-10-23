@@ -5,6 +5,7 @@
 
 #include "Parameters.h"
 #include "Presets.h"
+#include "Machines.h"
 #include "dsp/Biquad.h"
 #include "dsp/BitCrusher.h"
 #include "dsp/DrunkDelay.h"
@@ -44,6 +45,7 @@ public:
     // ---- Funciones para la interfaz ----------------------------------------
     int getCurrentPreset() const { return currentPreset.load(); }
     void selectPreset (int index);
+    int saveCustomPreset();
 
     /** Cambia entre los ajustes A y B (para comparar dos sonidos). */
     void toggleAB();
@@ -92,8 +94,12 @@ private:
     float lastRateValue = -1.0f, lastAliasValue = -1.0f;
 
     std::atomic<int> currentPreset { 0 };
+    std::atomic<int> currentMachine { -1 };
     std::atomic<int> activeSlot { 0 };
     juce::ValueTree slotState[2];
+    void updateMachineFilters (float character);
+    int lastMachine = -2;
+    float lastCharacter = -1.0f;
 
     std::atomic<float> inputPeak { 0.0f };
     std::atomic<float> outputPeak { 0.0f };
