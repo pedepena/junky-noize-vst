@@ -9,7 +9,7 @@ namespace junky::theme
 {
 // Lienzo de referencia rasterizado a estas medidas para mantener fija la interfaz.
 inline constexpr float designWidth = 1085.0f;
-inline constexpr float designHeight = 992.0f;
+inline constexpr float designHeight = 1182.0f;
 
 inline const juce::Colour metalLight { 0xffb9bbb7 };
 inline const juce::Colour metalMid { 0xff9a9c98 };

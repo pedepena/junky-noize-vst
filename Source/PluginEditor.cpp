@@ -141,7 +141,7 @@ void JunkyNoizeAudioProcessorEditor::resized()
     lcd.setBounds (fromDesign (340, 55, 420, 215));
     presetUpButton.setBounds (fromDesign (787, 70, 78, 85));
     presetDownButton.setBounds (fromDesign (787, 165, 78, 85));
-    saveTestButton.setBounds (fromDesign (600, 280, 150, 42));
+    saveTestButton.setBounds (fromDesign (560, 1000, 190, 58));
 
     filterKnob.setBounds (fromDesign (192, 443, 170, 170));
     mixKnob.setBounds (fromDesign (390, 327, 300, 300));

@@ -4,8 +4,7 @@
 
 namespace junky
 {
-/** Dibuja el fondo de la maquina: chapa metalica, paneles, tornillos, rejilla, oxido y aranazos.
-    Se dibuja en las coordenadas del diseno (1085 x 992). */
+/** Dibuja el fondo de la maquina en las coordenadas del diseno (1085 x 1182). */
 void paintChassis (juce::Graphics& g);
 
 /** Dibuja los textos fijos: logo, etiquetas y la nota adhesiva. */
