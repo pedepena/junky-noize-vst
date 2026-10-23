@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <juce_audio_processors/juce_audio_processors.h>
 
 namespace junky::params
@@ -13,6 +14,13 @@ inline constexpr const char* filter = "filter";
 inline constexpr const char* bassBoost = "bassBoost";
 inline constexpr const char* bassFreq = "bassFreq";
 inline constexpr const char* mono = "mono";
+inline constexpr const char* drive = "drive";
+inline constexpr const char* bits = "bits";
+inline constexpr const char* rate = "rate";
+inline constexpr const char* alias = "alias";
+inline constexpr const char* noise = "noise";
+inline constexpr const char* drunk = "drunk";
+inline constexpr const char* character = "character";
 
 inline juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
 {
@@ -65,6 +73,40 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
 
     layout.add (std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { mono, 1 }, "Mono", false));
+
+    auto percent = [] (float value, int)
+    {
+        return juce::String (juce::roundToInt (value * 100.0f)) + " %";
+    };
+    const juce::NormalisableRange<float> unit (0.0f, 1.0f, 0.001f);
+    layout.add (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { drive, 1 }, "Drive", unit, 0.0f,
+        Attr().withStringFromValueFunction (percent)));
+    layout.add (std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { bits, 1 }, "Bits", juce::StringArray { "16", "12", "8", "4" }, 0));
+    layout.add (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { rate, 1 }, "Rate", unit, 0.0f,
+        Attr().withStringFromValueFunction ([] (float value, int)
+        {
+            return value < 0.001f ? juce::String ("Off")
+                                  : juce::String (48.0f * std::pow (4.0f / 48.0f, value), 1) + " kHz";
+        })));
+    layout.add (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { alias, 1 }, "Alias", unit, 0.5f,
+        Attr().withStringFromValueFunction ([] (float value, int)
+        {
+            const auto label = value < 0.5f ? "Smooth " : "Gritty ";
+            return juce::String (label) + juce::String (juce::roundToInt (value * 100.0f)) + " %";
+        })));
+    layout.add (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { noise, 1 }, "Noise", unit, 0.0f,
+        Attr().withStringFromValueFunction (percent)));
+    layout.add (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { drunk, 1 }, "Drunk", unit, 0.0f,
+        Attr().withStringFromValueFunction (percent)));
+    layout.add (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { character, 1 }, "Character", unit, 1.0f,
+        Attr().withStringFromValueFunction (percent)));
 
     return layout;
 }

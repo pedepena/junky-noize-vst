@@ -1,6 +1,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#include <cmath>
+
 JunkyNoizeAudioProcessor::JunkyNoizeAudioProcessor()
     : AudioProcessor (BusesProperties()
                           .withInput ("Input", juce::AudioChannelSet::stereo(), true)
@@ -14,6 +16,13 @@ JunkyNoizeAudioProcessor::JunkyNoizeAudioProcessor()
     bassBoostParam = apvts.getRawParameterValue (junky::params::bassBoost);
     bassFreqParam = apvts.getRawParameterValue (junky::params::bassFreq);
     monoParam = apvts.getRawParameterValue (junky::params::mono);
+    driveParam = apvts.getRawParameterValue (junky::params::drive);
+    bitsParam = apvts.getRawParameterValue (junky::params::bits);
+    rateParam = apvts.getRawParameterValue (junky::params::rate);
+    aliasParam = apvts.getRawParameterValue (junky::params::alias);
+    noiseParam = apvts.getRawParameterValue (junky::params::noise);
+    drunkParam = apvts.getRawParameterValue (junky::params::drunk);
+    characterParam = apvts.getRawParameterValue (junky::params::character);
 }
 
 void JunkyNoizeAudioProcessor::prepareToPlay (double sampleRate, int)
@@ -23,14 +32,34 @@ void JunkyNoizeAudioProcessor::prepareToPlay (double sampleRate, int)
     inputGain.reset (sampleRate, 0.03);
     outputGain.reset (sampleRate, 0.03);
     mixAmount.reset (sampleRate, 0.03);
+    driveAmount.reset (sampleRate, 0.03);
+    noiseGain.reset (sampleRate, 0.03);
+    drunkAmount.reset (sampleRate, 0.1);
 
     inputGain.setCurrentAndTargetValue (juce::Decibels::decibelsToGain (inputParam->load()));
     outputGain.setCurrentAndTargetValue (juce::Decibels::decibelsToGain (outputParam->load()));
     mixAmount.setCurrentAndTargetValue (mixParam->load());
+    driveAmount.setCurrentAndTargetValue (driveParam->load());
+    const float initialNoise = noiseParam->load();
+    noiseGain.setCurrentAndTargetValue (initialNoise < 0.0005f ? 0.0f
+        : juce::Decibels::decibelsToGain (-66.0f + 42.0f * initialNoise));
+    drunkAmount.setCurrentAndTargetValue (drunkParam->load());
 
     lowPass.reset();
     highShelf.reset();
     bassShelf.reset();
+    aliasLowPass.reset();
+    machineLowPass.reset();
+    machineLowShelf.reset();
+    machineHighShelf.reset();
+    rateReducer.reset();
+    noiseSource.reset();
+    drunkDelay.prepare (sampleRate);
+    lastFilterValue = 999.0f;
+    lastBassHz = -1.0f;
+    lastRateValue = -1.0f;
+    lastAliasValue = -1.0f;
+    rateReducerOn = false;
 }
 
 bool JunkyNoizeAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -46,20 +75,31 @@ bool JunkyNoizeAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 
 void JunkyNoizeAudioProcessor::updateFilters (float filterValue, bool bassBoostOn, float bassHz)
 {
-    // Filtro tipo "tono": hacia la izquierda oscurece (paso bajo), hacia la derecha abrillanta (shelf de agudos).
-    lowPassOn = filterValue < -0.001f;
-    highShelfOn = filterValue > 0.001f;
+    if (filterValue != lastFilterValue)
+    {
+        const bool wasLowPassOn = lowPassOn;
+        const bool wasHighShelfOn = highShelfOn;
+        lowPassOn = filterValue < -0.001f;
+        highShelfOn = filterValue > 0.001f;
 
-    if (lowPassOn)
-        lowPass.setLowPass (currentSampleRate, 20000.0 * std::pow (800.0 / 20000.0, (double) -filterValue));
+        if (lowPassOn)
+            lowPass.setLowPass (currentSampleRate, 20000.0 * std::pow (800.0 / 20000.0, (double) -filterValue));
+        if (highShelfOn)
+            highShelf.setHighShelf (currentSampleRate, 4000.0, 9.0 * (double) filterValue);
+        if (wasLowPassOn != lowPassOn) lowPass.reset();
+        if (wasHighShelfOn != highShelfOn) highShelf.reset();
+        lastFilterValue = filterValue;
+    }
 
-    if (highShelfOn)
-        highShelf.setHighShelf (currentSampleRate, 4000.0, 9.0 * (double) filterValue);
-
-    bassOn = bassBoostOn;
-
-    if (bassOn)
-        bassShelf.setLowShelf (currentSampleRate, bassHz, 6.0);
+    if (bassBoostOn != bassOn || bassHz != lastBassHz)
+    {
+        const bool wasBassOn = bassOn;
+        bassOn = bassBoostOn;
+        if (bassOn)
+            bassShelf.setLowShelf (currentSampleRate, bassHz, 6.0);
+        if (wasBassOn != bassOn) bassShelf.reset();
+        lastBassHz = bassHz;
+    }
 }
 
 void JunkyNoizeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -78,6 +118,44 @@ void JunkyNoizeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     inputGain.setTargetValue (juce::Decibels::decibelsToGain (inputParam->load()));
     outputGain.setTargetValue (juce::Decibels::decibelsToGain (outputParam->load()));
     mixAmount.setTargetValue (mixParam->load());
+    driveAmount.setTargetValue (driveParam->load());
+
+    const float rateValue = rateParam->load();
+    const float aliasValue = aliasParam->load();
+    const float noiseValue = noiseParam->load();
+    const float characterValue = characterParam->load();
+    const int bitIndex = juce::jlimit (0, 3, static_cast<int> (std::lround (bitsParam->load())));
+    constexpr int bitDepths[4] { 16, 12, 8, 4 };
+    const int bitDepth = bitDepths[bitIndex];
+    noiseGain.setTargetValue (noiseValue < 0.0005f ? 0.0f
+        : juce::Decibels::decibelsToGain (-66.0f + 42.0f * noiseValue));
+    drunkAmount.setTargetValue (drunkParam->load());
+
+    const bool rateActive = rateValue >= 0.001f;
+    const double rateHz = 48000.0 * std::pow (4000.0 / 48000.0, (double) rateValue);
+    const double ratio = ! rateActive || rateHz >= currentSampleRate * 0.999
+        ? 1.0 : rateHz / currentSampleRate;
+    if (rateValue != lastRateValue || aliasValue != lastAliasValue)
+    {
+        const bool nextRateReducerOn = rateActive && ratio < 0.999;
+        if (nextRateReducerOn && ! rateReducerOn)
+            rateReducer.reset();
+        rateReducerOn = nextRateReducerOn;
+        const bool wasAliasLowPassOn = aliasLowPassOn;
+        aliasLowPassOn = rateReducerOn;
+        if (aliasLowPassOn)
+        {
+            const double fcClean = 0.40 * rateHz;
+            const double fcGritty = juce::jmin (0.45 * currentSampleRate, 20000.0);
+            const double fcAlias = fcClean * std::pow (juce::jmax (fcGritty, fcClean) / fcClean,
+                                                       (double) aliasValue);
+            aliasLowPass.setLowPass (currentSampleRate, fcAlias);
+        }
+        if (wasAliasLowPassOn != aliasLowPassOn)
+            aliasLowPass.reset();
+        lastRateValue = rateValue;
+        lastAliasValue = aliasValue;
+    }
 
     updateFilters (filterParam->load(), bassBoostParam->load() > 0.5f, bassFreqParam->load());
 
@@ -94,8 +172,13 @@ void JunkyNoizeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         const float inGain = inputGain.getNextValue();
         const float outGain = outputGain.getNextValue();
         const float mixValue = mixAmount.getNextValue();
+        const float driveValue = driveAmount.getNextValue();
+        const float noiseLevel = noiseGain.getNextValue();
+        const float drunkValue = drunkAmount.getNextValue();
 
         float dry[2] = { 0.0f, 0.0f };
+        float wet[2] = { 0.0f, 0.0f };
+        float mixed[2] = { 0.0f, 0.0f };
 
         for (int ch = 0; ch < numChannels; ++ch)
             dry[ch] = data[ch][i] * inGain;
@@ -110,20 +193,37 @@ void JunkyNoizeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         for (int ch = 0; ch < numChannels; ++ch)
         {
             inPeak = juce::jmax (inPeak, std::abs (dry[ch]));
+            wet[ch] = junky::saturate (dry[ch], driveValue);
+            if (aliasLowPassOn)
+                wet[ch] = aliasLowPass.process (ch, wet[ch]);
+        }
 
-            // Aqui es donde, en la fase 2, entrara el motor de las maquinas de sampleo.
-            float wet = dry[ch];
+        rateReducer.process (wet, numChannels, ratio);
+
+        for (int ch = 0; ch < numChannels; ++ch)
+        {
+            wet[ch] = junky::quantise (wet[ch], bitDepth);
+            wet[ch] += noiseSource.process (ch, 1.0f, noiseLevel);
+
+            // Los perfiles de maquina y su EQ se incorporan en la fase 2.
+            juce::ignoreUnused (characterValue);
 
             if (lowPassOn)
-                wet = lowPass.process (ch, wet);
+                wet[ch] = lowPass.process (ch, wet[ch]);
 
             if (highShelfOn)
-                wet = highShelf.process (ch, wet);
+                wet[ch] = highShelf.process (ch, wet[ch]);
 
             if (bassOn)
-                wet = bassShelf.process (ch, wet);
+                wet[ch] = bassShelf.process (ch, wet[ch]);
 
-            const float out = (dry[ch] + mixValue * (wet - dry[ch])) * outGain;
+            mixed[ch] = dry[ch] + mixValue * (wet[ch] - dry[ch]);
+        }
+
+        drunkDelay.process (mixed, numChannels, drunkValue);
+        for (int ch = 0; ch < numChannels; ++ch)
+        {
+            const float out = mixed[ch] * outGain;
             data[ch][i] = out;
             outPeak = juce::jmax (outPeak, std::abs (out));
         }
