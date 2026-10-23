@@ -5,7 +5,7 @@ namespace junky
 {
 void KnobLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
                                         float sliderPosProportional, float rotaryStartAngle,
-                                        float rotaryEndAngle, juce::Slider&)
+                                        float rotaryEndAngle, juce::Slider& slider)
 {
     const auto bounds = juce::Rectangle<float> ((float) x, (float) y, (float) width, (float) height);
     const auto centre = bounds.getCentre();
@@ -23,13 +23,16 @@ void KnobLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
 
     // Marcas alrededor del knob (11 marcas repartidas por el recorrido)
     g.setColour (theme::ink.withAlpha (0.85f));
-    const int numTicks = 11;
+    const bool stepped = (int) slider.getProperties().getWithDefault ("steps", 0) == 4;
+    const int numTicks = stepped ? 4 : 11;
 
     for (int i = 0; i < numTicks; ++i)
     {
         const float t = (float) i / (float) (numTicks - 1);
-        const float a = rotaryStartAngle + t * (rotaryEndAngle - rotaryStartAngle);
-        const bool major = (i == 0 || i == numTicks - 1 || i == numTicks / 2);
+        const float a = stepped
+            ? juce::MathConstants<float>::pi * (225.0f + 90.0f * (float) i) / 180.0f
+            : rotaryStartAngle + t * (rotaryEndAngle - rotaryStartAngle);
+        const bool major = stepped || i == 0 || i == numTicks - 1 || i == numTicks / 2;
         const float r1 = outerRadius * (major ? 0.80f : 0.84f);
         const float r2 = outerRadius * 0.96f;
 

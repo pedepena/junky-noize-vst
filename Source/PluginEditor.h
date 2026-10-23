@@ -5,6 +5,7 @@
 
 #include "PluginProcessor.h"
 #include "ui/KnobLookAndFeel.h"
+#include "ui/ABSwitch.h"
 #include "ui/LcdDisplay.h"
 #include "ui/LevelMeter.h"
 #include "ui/PanelButton.h"
@@ -29,18 +30,19 @@ private:
 
     junky::KnobLookAndFeel knobLook;
 
-    juce::Slider filterKnob, mixKnob, bassFreqKnob, inputKnob, outputKnob;
+    juce::Slider filterKnob, mixKnob, bassFreqKnob, inputKnob, outputKnob, drunkKnob;
+    juce::Slider driveKnob, bitsKnob, rateKnob, aliasKnob, noiseKnob, characterKnob;
 
-    junky::PanelButton abButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledRed, false };
+    junky::PanelButton saveButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, false };
     junky::PanelButton bassButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
     junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
     junky::PanelButton stereoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
     junky::PanelButton presetUpButton { junky::PanelButton::Style::arrowUp };
     junky::PanelButton presetDownButton { junky::PanelButton::Style::arrowDown };
+    junky::ABSwitch abSwitch;
 
     junky::LcdDisplay lcd;
     junky::LevelMeter inputMeter, outputMeter;
-    juce::TextButton saveTestButton { "SAVE TEST" };
 
     float inputDisplayDb = -100.0f;
     float outputDisplayDb = -100.0f;
@@ -51,7 +53,8 @@ private:
     // Las conexiones con los parametros van al final: se destruyen antes que los controles.
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     std::unique_ptr<SliderAttachment> filterAttachment, mixAttachment, bassFreqAttachment,
-        inputAttachment, outputAttachment;
+        inputAttachment, outputAttachment, drunkAttachment, driveAttachment, bitsAttachment,
+        rateAttachment, aliasAttachment, noiseAttachment, characterAttachment;
     std::unique_ptr<juce::ButtonParameterAttachment> bassAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JunkyNoizeAudioProcessorEditor)

@@ -1,11 +1,12 @@
 #pragma once
 
+#include <cmath>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "Theme.h"
 
 namespace junky
 {
-/** Medidor de nivel vertical con segmentos de colores y la escala 0, -6, -12, -18, -24 dB. */
+/** Medidor vertical de 15 segmentos con escala entre -42 y 0 dB. */
 class LevelMeter : public juce::Component
 {
 public:
@@ -20,36 +21,38 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        auto bounds = getLocalBounds().toFloat();
-        auto barArea = bounds.removeFromLeft (bounds.getWidth() * 0.38f);
-
+        const auto bounds = getLocalBounds().toFloat();
+        const auto bar = juce::Rectangle<float> (bounds.getX(), bounds.getY(), bounds.getWidth() * 0.38f,
+                                                 bounds.getHeight());
         g.setColour (juce::Colour (0xff0e0e0e));
-        g.fillRoundedRectangle (barArea, 3.0f);
+        g.fillRoundedRectangle (bar, 3.0f);
+        constexpr int segments = 15;
+        const float segmentHeight = (bar.getHeight() - 6.0f) / (float) segments;
 
-        const int numSegments = 10;
-        const float topDb = 0.0f;
-        const float bottomDb = -30.0f;
-        const float segHeight = (barArea.getHeight() - 6.0f) / (float) numSegments;
-
-        for (int i = 0; i < numSegments; ++i)
+        for (int i = 0; i < segments; ++i)
         {
-            // i = 0 es el segmento de abajo
-            const float thresholdDb = bottomDb + (float) i * ((topDb - bottomDb) / (float) numSegments);
-            const bool on = levelDb >= thresholdDb;
-
-            juce::Colour colour = i >= 9 ? juce::Colour (0xffe03a2a)
-                                : i >= 8 ? juce::Colour (0xffe8802a)
-                                : i >= 6 ? juce::Colour (0xffe2c52c)
-                                         : juce::Colour (0xff43c24a);
-
-            auto seg = juce::Rectangle<float> (barArea.getX() + 3.0f,
-                                               barArea.getBottom() - 3.0f - (float) (i + 1) * segHeight + 1.5f,
-                                               barArea.getWidth() - 6.0f, segHeight - 3.0f);
-
+            const float threshold = -42.0f + 3.0f * (float) i;
+            const bool on = levelDb >= threshold;
+            const auto colour = i >= 14 ? juce::Colour (0xffe03a2a)
+                              : i >= 12 ? juce::Colour (0xffe8802a)
+                              : i >= 9  ? juce::Colour (0xffe2c52c)
+                                        : juce::Colour (0xff43c24a);
+            const auto segment = juce::Rectangle<float> (bar.getX() + 3.0f,
+                bar.getBottom() - 3.0f - (float) (i + 1) * segmentHeight + 1.5f,
+                bar.getWidth() - 6.0f, segmentHeight - 3.0f);
             g.setColour (on ? colour : colour.darker (1.4f).withAlpha (0.55f));
-            g.fillRect (seg);
-        }
+            g.fillRect (segment);
 
+            if (i % 2 == 0)
+            {
+                const juce::String text = juce::String ((int) threshold);
+                const juce::Rectangle<float> label (bar.getRight() + 5.0f,
+                    bar.getBottom() - 3.0f - (float) (i + 1) * segmentHeight,
+                    bounds.getRight() - bar.getRight() - 5.0f, segmentHeight);
+                g.setColour (theme::ink);
+                theme::drawBitmapText (g, text, label, 9.0f);
+            }
+        }
     }
 
 private:
