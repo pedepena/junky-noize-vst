@@ -61,7 +61,8 @@ inline std::array<std::uint8_t, 7> bitmapGlyph (juce::juce_wchar character)
         case '-': return Rows { 0, 0, 0, 31, 0, 0, 0 }; case '&': return Rows { 12, 18, 20, 8, 21, 18, 13 };
         case '.': return Rows { 0, 0, 0, 0, 0, 12, 12 }; case ':': return Rows { 0, 12, 12, 0, 12, 12, 0 };
         case '/': return Rows { 1, 2, 2, 4, 8, 8, 16 }; case '(': return Rows { 2, 4, 8, 8, 8, 4, 2 };
-        case ')': return Rows { 8, 4, 2, 2, 2, 4, 8 }; default: return Rows {};
+        case ')': return Rows { 8, 4, 2, 2, 2, 4, 8 }; case '%': return Rows { 25, 26, 2, 4, 8, 22, 19 };
+        default: return Rows {};
     }
 }
 

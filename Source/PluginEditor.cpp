@@ -17,15 +17,33 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     setupKnob (bassFreqKnob);
     setupKnob (inputKnob);
     setupKnob (outputKnob);
+    setupKnob (drunkKnob);
+    setupKnob (driveKnob);
+    setupKnob (bitsKnob);
+    setupKnob (rateKnob);
+    setupKnob (aliasKnob);
+    setupKnob (noiseKnob);
+    setupKnob (characterKnob);
+
+    bitsKnob.setRange (0.0, 3.0, 1.0);
+    bitsKnob.getProperties().set ("steps", 4);
 
     filterAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, filter, filterKnob);
     mixAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, mix, mixKnob);
     bassFreqAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, bassFreq, bassFreqKnob);
     inputAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, input, inputKnob);
     outputAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, output, outputKnob);
+    drunkAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, drunk, drunkKnob);
+    driveAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, drive, driveKnob);
+    bitsAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, bits, bitsKnob);
+    rateAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, rate, rateKnob);
+    aliasAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, alias, aliasKnob);
+    noiseAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, noise, noiseKnob);
+    characterAttachment = std::make_unique<SliderAttachment> (audioProcessor.apvts, character, characterKnob);
 
     // Doble clic en un knob = volver al valor por defecto
-    for (auto* knob : { &filterKnob, &mixKnob, &bassFreqKnob, &inputKnob, &outputKnob })
+    for (auto* knob : { &filterKnob, &mixKnob, &bassFreqKnob, &inputKnob, &outputKnob,
+                        &drunkKnob, &driveKnob, &bitsKnob, &rateKnob, &aliasKnob, &noiseKnob, &characterKnob })
         knob->setDoubleClickReturnValue (true, knob->getValue());
 
     filterKnob.setDoubleClickReturnValue (true, 0.0);
@@ -33,6 +51,13 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     bassFreqKnob.setDoubleClickReturnValue (true, 100.0);
     inputKnob.setDoubleClickReturnValue (true, 0.0);
     outputKnob.setDoubleClickReturnValue (true, 0.0);
+    drunkKnob.setDoubleClickReturnValue (true, 0.0);
+    driveKnob.setDoubleClickReturnValue (true, 0.0);
+    bitsKnob.setDoubleClickReturnValue (true, 0.0);
+    rateKnob.setDoubleClickReturnValue (true, 0.0);
+    aliasKnob.setDoubleClickReturnValue (true, 0.5);
+    noiseKnob.setDoubleClickReturnValue (true, 0.0);
+    characterKnob.setDoubleClickReturnValue (true, 1.0);
 
     // Bass boost: interruptor conectado al parametro
     bassButton.setClickingTogglesState (true);
@@ -48,12 +73,12 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     addAndMakeVisible (stereoButton);
 
     // A/B
-    abButton.onClick = [this]
+    abSwitch.onSelect = [this] (int)
     {
         audioProcessor.toggleAB();
-        repaint();
     };
-    addAndMakeVisible (abButton);
+    abSwitch.setActiveSlotB (audioProcessor.isSlotB());
+    addAndMakeVisible (abSwitch);
 
     // Pantalla de presets
     juce::StringArray names;
@@ -69,12 +94,13 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     presetDownButton.onClick = [this] { lcd.setSelected (lcd.getSelected() + 1); audioProcessor.selectPreset (lcd.getSelected()); };
     addAndMakeVisible (presetUpButton);
     addAndMakeVisible (presetDownButton);
-    saveTestButton.onClick = [this]
+    saveButton.setLabel ("SAVE");
+    saveButton.onClick = [this]
     {
         const int slot = audioProcessor.saveCustomPreset();
         lcd.setHeader (slot >= 0 ? "SAVED TO CUSTOM " + juce::String (slot + 1) : "SELECT A CUSTOM SLOT", slot >= 0 ? 1200 : 1500);
     };
-    addAndMakeVisible (saveTestButton);
+    addAndMakeVisible (saveButton);
 
     addAndMakeVisible (inputMeter);
     addAndMakeVisible (outputMeter);
@@ -89,7 +115,8 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
 
 JunkyNoizeAudioProcessorEditor::~JunkyNoizeAudioProcessorEditor()
 {
-    for (auto* knob : { &filterKnob, &mixKnob, &bassFreqKnob, &inputKnob, &outputKnob })
+    for (auto* knob : { &filterKnob, &mixKnob, &bassFreqKnob, &inputKnob, &outputKnob,
+                        &drunkKnob, &driveKnob, &bitsKnob, &rateKnob, &aliasKnob, &noiseKnob, &characterKnob })
         knob->setLookAndFeel (nullptr);
 }
 
@@ -141,12 +168,13 @@ void JunkyNoizeAudioProcessorEditor::resized()
     lcd.setBounds (fromDesign (340, 55, 420, 215));
     presetUpButton.setBounds (fromDesign (787, 70, 78, 85));
     presetDownButton.setBounds (fromDesign (787, 165, 78, 85));
-    saveTestButton.setBounds (fromDesign (560, 1000, 190, 58));
+    saveButton.setBounds (fromDesign (787, 258, 78, 34));
 
     filterKnob.setBounds (fromDesign (192, 443, 170, 170));
     mixKnob.setBounds (fromDesign (390, 327, 300, 300));
 
-    abButton.setBounds (fromDesign (860, 458, 90, 102));
+    drunkKnob.setBounds (fromDesign (723, 443, 170, 170));
+    abSwitch.setBounds (fromDesign (918, 264, 144, 50));
 
     monoButton.setBounds (fromDesign (90, 780, 110, 100));
     stereoButton.setBounds (fromDesign (250, 780, 110, 100));
@@ -154,10 +182,15 @@ void JunkyNoizeAudioProcessorEditor::resized()
     bassButton.setBounds (fromDesign (465, 778, 90, 95));
     bassFreqKnob.setBounds (fromDesign (590, 750, 180, 180));
 
-    inputMeter.setBounds (fromDesign (843, 730, 78, 115));
-    outputMeter.setBounds (fromDesign (948, 730, 78, 115));
-    inputKnob.setBounds (fromDesign (825, 840, 96, 96));
-    outputKnob.setBounds (fromDesign (930, 840, 96, 96));
+    inputMeter.setBounds (fromDesign (843, 728, 90, 268));
+    outputMeter.setBounds (fromDesign (947, 728, 90, 268));
+    inputKnob.setBounds (fromDesign (825, 1002, 96, 96));
+    outputKnob.setBounds (fromDesign (932, 1002, 96, 96));
+
+    juce::Slider* colourKnobs[] = { &driveKnob, &bitsKnob, &rateKnob, &aliasKnob, &noiseKnob, &characterKnob };
+    constexpr float centres[] = { 118, 236, 354, 472, 590, 708 };
+    for (int i = 0; i < 6; ++i)
+        colourKnobs[i]->setBounds (fromDesign (centres[i] - 44.0f, 1008, 88, 88));
 }
 
 void JunkyNoizeAudioProcessorEditor::timerCallback()
@@ -182,6 +215,7 @@ void JunkyNoizeAudioProcessorEditor::timerCallback()
     if (displayedSlotB != audioProcessor.isSlotB())
     {
         displayedSlotB = audioProcessor.isSlotB();
+        abSwitch.setActiveSlotB (displayedSlotB);
         repaint();
     }
 }

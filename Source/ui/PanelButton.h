@@ -19,6 +19,8 @@ public:
     {
     }
 
+    void setLabel (const juce::String& text) { label = text; repaint(); }
+
     void paintButton (juce::Graphics& g, bool isMouseOver, bool isButtonDown) override
     {
         auto bounds = getLocalBounds().toFloat().reduced (2.0f);
@@ -57,6 +59,15 @@ public:
             g.setColour (juce::Colours::black.withAlpha (0.55f));
             g.drawRoundedRectangle (led, 2.0f, 1.0f);
         }
+        if (style == Style::key && label.isNotEmpty())
+        {
+            g.setColour (theme::ink);
+            const float textHeight = juce::jmin (bounds.getHeight() * 0.34f, 18.0f);
+            const float textWidth = (float) label.length() * textHeight * 6.0f / 7.0f;
+            theme::drawBitmapText (g, label,
+                { bounds.getCentreX() - textWidth * 0.5f, bounds.getCentreY() - textHeight * 0.5f,
+                  textWidth, textHeight }, textHeight);
+        }
         else if (style != Style::key)
         {
             juce::Path arrow;
@@ -77,5 +88,6 @@ private:
     Style style;
     juce::Colour ledOffColour, ledOnColour;
     bool hasLed;
+    juce::String label;
 };
 } // namespace junky
