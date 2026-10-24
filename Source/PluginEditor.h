@@ -32,6 +32,7 @@ private:
     juce::Slider filterKnob, mixKnob, bassFreqKnob, inputKnob, outputKnob, drunkKnob;
     juce::Slider driveKnob, bitsKnob, rateKnob, aliasKnob, noiseKnob, characterKnob;
 
+    junky::PanelButton folderButton { junky::PanelButton::Style::folder, junky::theme::ledRed, junky::theme::ledGreen, false };
     junky::PanelButton saveButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, false };
     junky::PanelButton bassButton { junky::PanelButton::Style::agedKey, junky::theme::ledRed, junky::theme::ledGreen, true };
     junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
@@ -44,6 +45,7 @@ private:
 
     float inputDisplayDb = -100.0f;
     float outputDisplayDb = -100.0f;
+    int presetRefreshTicks = 0;
 
     juce::Image background;
 
