@@ -283,88 +283,162 @@ void JunkyNoizeAudioProcessor::setParameterPlain (const juce::String& parameterI
     }
 }
 
+
+namespace
+{
+juce::File userPresetDirectory()
+{
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+        .getChildFile ("Junky Noize").getChildFile ("Presets");
+}
+}
+
+juce::StringArray JunkyNoizeAudioProcessor::getPresetNames() const
+{
+    juce::StringArray names;
+    for (const auto& preset : junky::factoryPresets) names.add (preset.name);
+    const juce::ScopedLock lock (userPresetLock);
+    names.addArray (userPresetNames);
+    return names;
+}
+
+int JunkyNoizeAudioProcessor::getLcdSelectionIndex() const
+{
+    const juce::ScopedLock lock (userPresetLock);
+    if (selectedUserPreset.isNotEmpty())
+    {
+        const int pos = userPresetNames.indexOf (selectedUserPreset, true);
+        if (pos >= 0) return 51 + pos;
+    }
+    return juce::jlimit (0, 50, currentPreset.load());
+}
+
+bool JunkyNoizeAudioProcessor::refreshUserPresets()
+{
+    juce::StringArray next;
+    const auto dir = userPresetDirectory();
+    if (dir.isDirectory())
+    {
+        juce::Array<juce::File> files;
+        dir.findChildFiles (files, juce::File::findFiles, false, "*.xml");
+        for (const auto& file : files) next.add (file.getFileNameWithoutExtension());
+    }
+    next.sort (true);
+    const juce::ScopedLock lock (userPresetLock);
+    if (next == userPresetNames) return false;
+    userPresetNames = next;
+    if (selectedUserPreset.isNotEmpty() && userPresetNames.indexOf (selectedUserPreset, true) < 0)
+    {
+        selectedUserPreset.clear();
+        currentPreset.store (0);
+    }
+    return true;
+}
+
 void JunkyNoizeAudioProcessor::selectPreset (int index)
 {
-    index = juce::jlimit (0, (int) junky::factoryPresets.size() - 1, index);
-    currentPreset.store (index);
-
-    const auto& preset = junky::factoryPresets[(size_t) index];
-
-    if (preset.kind == junky::Preset::Kind::custom)
+    if (index < 51)
     {
-        auto dir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-            .getChildFile ("Junky Noize").getChildFile ("Presets");
-        auto file = dir.getChildFile ("custom" + juce::String (index - 50) + ".xml");
-        if (file.existsAsFile())
-            if (auto xml = juce::parseXML (file))
-                if (xml->hasTagName (apvts.state.getType()))
-                {
-                    auto tree = juce::ValueTree::fromXml (*xml);
-                    currentMachine.store (juce::jlimit (-1, 38, (int) tree.getProperty ("machine", -1)));
-                    apvts.replaceState (tree);
-                }
+        index = juce::jlimit (0, 50, index);
+        { const juce::ScopedLock lock (userPresetLock); selectedUserPreset.clear(); }
+        currentPreset.store (index);
+        const auto& preset = junky::factoryPresets[(size_t) index];
+        currentMachine.store (preset.machine);
+        auto plain = [this] (const juce::String& id, float value) { setParameterPlain (id, value); };
+        plain (junky::params::drive, preset.drive);
+        plain (junky::params::bits, (float) preset.bitsIndex);
+        plain (junky::params::rate, preset.rate);
+        plain (junky::params::alias, preset.alias);
+        plain (junky::params::noise, preset.noise);
+        plain (junky::params::drunk, preset.drunk);
+        plain (junky::params::character, preset.character);
+        if (preset.kind == junky::Preset::Kind::init)
+        { plain (junky::params::input, 0); plain (junky::params::output, 0); }
+        plain (junky::params::filter, preset.filter);
+        plain (junky::params::mix, preset.mix);
+        plain (junky::params::bassBoost, preset.bassBoost ? 1.0f : 0.0f);
+        plain (junky::params::bassFreq, preset.bassFreq);
+        plain (junky::params::mono, preset.mono ? 1.0f : 0.0f);
         return;
     }
 
-    currentMachine.store (preset.machine);
-    auto plain = [this] (const juce::String& id, float value) { setParameterPlain (id, value); };
-    plain (junky::params::drive, preset.drive);
-    plain (junky::params::bits, (float) preset.bitsIndex);
-    plain (junky::params::rate, preset.rate);
-    plain (junky::params::alias, preset.alias);
-    plain (junky::params::noise, preset.noise);
-    plain (junky::params::drunk, preset.drunk);
-    plain (junky::params::character, preset.character);
-    if (preset.kind == junky::Preset::Kind::init)
-    { plain (junky::params::input, 0); plain (junky::params::output, 0); }
-
-    setParameterPlain (junky::params::filter, preset.filter);
-    setParameterPlain (junky::params::mix, preset.mix);
-    setParameterPlain (junky::params::bassBoost, preset.bassBoost ? 1.0f : 0.0f);
-    setParameterPlain (junky::params::bassFreq, preset.bassFreq);
-    setParameterPlain (junky::params::mono, preset.mono ? 1.0f : 0.0f);
+    juce::String name;
+    {
+        const juce::ScopedLock lock (userPresetLock);
+        const int pos = index - 51;
+        if (! juce::isPositiveAndBelow (pos, userPresetNames.size())) return;
+        name = userPresetNames[pos];
+    }
+    const auto file = userPresetDirectory().getChildFile (name + ".xml");
+    auto xml = file.existsAsFile() ? juce::parseXML (file) : nullptr;
+    if (xml == nullptr || ! xml->hasTagName (apvts.state.getType())) { refreshUserPresets(); return; }
+    auto tree = juce::ValueTree::fromXml (*xml);
+    if (! tree.isValid()) { refreshUserPresets(); return; }
+    currentMachine.store (juce::jlimit (-1, 38, (int) tree.getProperty ("machine", -1)));
+    apvts.replaceState (tree);
+    currentPreset.store (0);
+    { const juce::ScopedLock lock (userPresetLock); selectedUserPreset = name; }
 }
 
-int JunkyNoizeAudioProcessor::saveCustomPreset()
+bool JunkyNoizeAudioProcessor::saveUserPreset (const juce::String& name, bool replaceExisting)
 {
-    auto dir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-        .getChildFile ("Junky Noize").getChildFile ("Presets");
-    dir.createDirectory();
-    int slot = currentPreset.load() >= 51 && currentPreset.load() <= 54 ? currentPreset.load() - 51 : -1;
-    if (slot < 0)
-        for (int i = 0; i < 4; ++i)
-            if (! dir.getChildFile ("custom" + juce::String (i + 1) + ".xml").existsAsFile()) { slot = i; break; }
-    if (slot < 0) return -1;
-    auto tree = apvts.copyState(); tree.setProperty ("machine", currentMachine.load(), nullptr);
+    auto dir = userPresetDirectory();
+    if (! dir.createDirectory().wasOk()) return false;
+    auto target = dir.getChildFile (name + ".xml");
+    juce::String oldName;
+    {
+        const juce::ScopedLock lock (userPresetLock);
+        for (const auto& existing : userPresetNames)
+            if (existing.equalsIgnoreCase (name)) { oldName = existing; break; }
+    }
+    if (oldName.isNotEmpty() && ! replaceExisting) return false;
+    auto tree = apvts.copyState();
+    tree.setProperty ("machine", juce::jlimit (-1, 38, currentMachine.load()), nullptr);
     auto xml = tree.createXml();
-    return xml != nullptr && xml->writeTo (dir.getChildFile ("custom" + juce::String (slot + 1) + ".xml")) ? slot : -1;
+    if (xml == nullptr || ! xml->writeTo (target)) return false;
+    if (oldName.isNotEmpty() && oldName != name)
+        dir.getChildFile (oldName + ".xml").deleteFile();
+    refreshUserPresets();
+    currentPreset.store (0);
+    { const juce::ScopedLock lock (userPresetLock); selectedUserPreset = name; }
+    return true;
 }
 
 void JunkyNoizeAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
     state.setProperty ("preset", currentPreset.load(), nullptr);
+    { const juce::ScopedLock lock (userPresetLock); state.setProperty ("userPreset", selectedUserPreset, nullptr); }
     state.setProperty ("machine", currentMachine.load(), nullptr);
     state.setProperty ("editorWidth", editorWidth.load(), nullptr);
-
-    if (auto xml = state.createXml())
-        copyXmlToBinary (*xml, destData);
+    if (auto xml = state.createXml()) copyXmlToBinary (*xml, destData);
 }
 
 void JunkyNoizeAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     if (auto xml = getXmlFromBinary (data, sizeInBytes))
-    {
         if (xml->hasTagName (apvts.state.getType()))
         {
             auto tree = juce::ValueTree::fromXml (*xml);
-            currentPreset.store (juce::jlimit (0, (int) junky::factoryPresets.size() - 1,
-                                               (int) tree.getProperty ("preset", 0)));
+            const int restoredPreset = juce::jlimit (0, 50, (int) tree.getProperty ("preset", 0));
+            const auto restoredUser = tree.getProperty ("userPreset", juce::String()).toString();
             editorWidth.store (juce::jlimit (0, 100000, (int) tree.getProperty ("editorWidth", 0)));
             apvts.replaceState (tree);
             currentMachine.store (juce::jlimit (-1, 38, (int) tree.getProperty ("machine", -1)));
+            currentPreset.store (restoredPreset);
+            refreshUserPresets();
+            { const juce::ScopedLock lock (userPresetLock); selectedUserPreset.clear(); }
+            if (restoredUser.isNotEmpty())
+            {
+                const auto file = userPresetDirectory().getChildFile (restoredUser + ".xml");
+                if (file.existsAsFile())
+                {
+                    const juce::ScopedLock lock (userPresetLock);
+                    if (userPresetNames.indexOf (restoredUser, true) >= 0)
+                        selectedUserPreset = restoredUser;
+                }
+            }
         }
-    }
 }
 
 // Esta funcion la llama el DAW para crear el plugin.

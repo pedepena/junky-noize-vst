@@ -10,7 +10,7 @@ namespace junky
 class PanelButton : public juce::Button
 {
 public:
-    enum class Style { key, agedKey, arrowUp, arrowDown };
+    enum class Style { key, agedKey, arrowUp, arrowDown, folder };
 
     explicit PanelButton (Style s = Style::key,
                           juce::Colour off = theme::ledRed,
@@ -145,6 +145,29 @@ public:
                 g.setColour (juce::Colours::black.withAlpha (0.55f));
                 g.drawRoundedRectangle (led, 2.0f, 1.0f);
             }
+        }
+        else if (style == Style::folder)
+        {
+            juce::ColourGradient gradient (face.brighter (0.15f), bounds.getX(), bounds.getY(),
+                                           face.darker (0.2f), bounds.getX(), bounds.getBottom(), false);
+            g.setGradientFill (gradient);
+            g.fillRoundedRectangle (bounds, corner);
+            g.setColour (juce::Colours::black.withAlpha (0.55f));
+            g.drawRoundedRectangle (bounds, corner, 1.5f);
+            const float x = bounds.getCentreX(), y = bounds.getCentreY();
+            const float w = bounds.getWidth() * 0.46f, h = bounds.getHeight() * 0.43f;
+            juce::Path folder;
+            folder.startNewSubPath (x - w * 0.5f, y - h * 0.30f);
+            folder.lineTo (x - w * 0.18f, y - h * 0.30f);
+            folder.lineTo (x - w * 0.05f, y - h * 0.12f);
+            folder.lineTo (x + w * 0.5f, y - h * 0.12f);
+            folder.lineTo (x + w * 0.5f, y + h * 0.42f);
+            folder.lineTo (x - w * 0.5f, y + h * 0.42f);
+            folder.closeSubPath();
+            g.setColour (theme::ink);
+            g.fillPath (folder);
+            g.setColour (theme::ink.darker (0.25f));
+            g.strokePath (folder, juce::PathStrokeType (1.2f));
         }
         else
         {

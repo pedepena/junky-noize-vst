@@ -6,9 +6,9 @@ struct Preset
 {
     const char* name; int machine; float filter, mix; bool bassBoost; float bassFreq; bool mono;
     float drive; int bitsIndex; float rate, alias, noise, drunk, character;
-    enum class Kind { init, factory, custom } kind;
+    enum class Kind { init, factory } kind;
 };
-inline constexpr std::array<Preset, 55> factoryPresets {{
+inline constexpr std::array<Preset, 51> factoryPresets {{
     {"DEFAULT",-1,0,1,false,100,false,0,0,0,.5f,0,0,1,Preset::Kind::init},
     {"MBC-60",0,-.10f,1,true,90,false,.48f,1,.14f,.55f,.18f,0,1,Preset::Kind::factory},
     {"MBC-60 II",1,0,1,true,85,false,.42f,1,.12f,.45f,.14f,0,1,Preset::Kind::factory},
@@ -60,9 +60,5 @@ inline constexpr std::array<Preset, 55> factoryPresets {{
     {"DIRTY FUNK",4,.35f,1,true,150,false,.55f,2,.2f,.6f,.15f,0,1,Preset::Kind::factory},
     {"WARM & ROUND",35,-.30f,1,true,70,false,.22f,1,.12f,.25f,.1f,0,1,Preset::Kind::factory},
     {"CRUSHED BREAKS",7,0,1,false,100,false,.45f,2,.4f,.9f,.1f,0,1,Preset::Kind::factory},
-    {"CUSTOM 1",-1,0,1,false,100,false,0,0,0,.5f,0,0,1,Preset::Kind::custom},
-    {"CUSTOM 2",-1,0,1,false,100,false,0,0,0,.5f,0,0,1,Preset::Kind::custom},
-    {"CUSTOM 3",-1,0,1,false,100,false,0,0,0,.5f,0,0,1,Preset::Kind::custom},
-    {"CUSTOM 4",-1,0,1,false,100,false,0,0,0,.5f,0,0,1,Preset::Kind::custom}
 }};
 } // namespace junky

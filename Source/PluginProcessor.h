@@ -44,8 +44,11 @@ public:
 
     // ---- Funciones para la interfaz ----------------------------------------
     int getCurrentPreset() const { return currentPreset.load(); }
+    int getLcdSelectionIndex() const;
+    juce::StringArray getPresetNames() const;
+    bool refreshUserPresets();
     void selectPreset (int index);
-    int saveCustomPreset();
+    bool saveUserPreset (const juce::String& name, bool replaceExisting);
     int getEditorWidth() const { return editorWidth.load(); }
     void setEditorWidth (int width) { editorWidth.store (width); }
 
@@ -92,6 +95,9 @@ private:
     float lastRateValue = -1.0f, lastAliasValue = -1.0f;
 
     std::atomic<int> currentPreset { 0 };
+    mutable juce::CriticalSection userPresetLock;
+    juce::StringArray userPresetNames;
+    juce::String selectedUserPreset;
     std::atomic<int> currentMachine { -1 };
     std::atomic<int> editorWidth { 0 };
     void updateMachineFilters (float character);
