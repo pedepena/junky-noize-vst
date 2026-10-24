@@ -8,5 +8,5 @@ namespace junky
 void paintChassis (juce::Graphics& g);
 
 /** Dibuja los textos fijos: logo, etiquetas y la nota adhesiva. */
-void paintLabels (juce::Graphics& g, bool isSlotB);
+void paintLabels (juce::Graphics& g);
 } // namespace junky

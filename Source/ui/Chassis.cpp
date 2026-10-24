@@ -10,8 +10,7 @@ namespace
 {
 void drawCentred (juce::Graphics& g, const juce::String& text, juce::Point<float> centre, float height)
 {
-    const float width = (float) text.length() * height * 6.0f / 7.0f;
-    theme::drawBitmapText (g, text, { centre.x - width * 0.5f, centre.y - height * 0.5f, width, height }, height);
+    theme::drawPanelText (g, text, centre.x, centre.y, height);
 }
 
 juce::Point<float> polarPoint (juce::Point<float> centre, float degrees, float radius)
@@ -32,52 +31,50 @@ void paintChassis (juce::Graphics& g)
         g.fillAll (theme::metalMid);
 }
 
-void paintLabels (juce::Graphics& g, bool)
+void paintLabels (juce::Graphics& g)
 {
-    g.setColour (theme::ink);
-    drawCentred (g, "FILTER", { 285.0f, 425.0f }, 14.0f);
-    drawCentred (g, "DARK", { 214.0f, 606.0f }, 13.0f);
-    drawCentred (g, "BRIGHT", { 340.0f, 606.0f }, 13.0f);
-    drawCentred (g, "MIX", { 543.0f, 632.0f }, 26.0f);
-    drawCentred (g, "0%", { 421.0f, 607.0f }, 13.0f);
-    drawCentred (g, "100%", { 672.0f, 607.0f }, 13.0f);
-    drawCentred (g, "DRUNK", { 814.0f, 425.0f }, 14.0f);
-    drawCentred (g, "OFF", { 748.0f, 606.0f }, 13.0f);
-    drawCentred (g, "MAX", { 866.0f, 606.0f }, 13.0f);
-    drawCentred (g, "MONO", { 147.0f, 753.0f }, 15.0f);
-    drawCentred (g, "STEREO", { 305.0f, 753.0f }, 15.0f);
-    drawCentred (g, "BASS BOOST", { 535.0f, 735.0f }, 15.0f);
-    drawCentred (g, "FREQ", { 697.0f, 733.0f }, 15.0f);
+    drawCentred (g, "FILTER", { 277.0f, 428.0f }, 26.0f);
+    drawCentred (g, "DRUNK", { 808.0f, 428.0f }, 26.0f);
+    drawCentred (g, "DARK", { 196.0f, 624.0f }, 20.0f);
+    drawCentred (g, "OFF", { 735.0f, 624.0f }, 20.0f);
+    drawCentred (g, "BRIGHT", { 358.0f, 624.0f }, 20.0f);
+    drawCentred (g, "MAX", { 881.0f, 624.0f }, 20.0f);
+    drawCentred (g, "MIX", { 540.0f, 652.0f }, 40.0f);
+    drawCentred (g, "0%", { 420.0f, 626.0f }, 20.0f);
+    drawCentred (g, "100%", { 660.0f, 626.0f }, 20.0f);
+    drawCentred (g, "MONO", { 147.0f, 753.0f }, 24.0f);
+    drawCentred (g, "STEREO", { 305.0f, 753.0f }, 24.0f);
+    drawCentred (g, "BASS BOOST", { 535.0f, 737.0f }, 24.0f);
+    drawCentred (g, "FREQ", { 680.0f, 737.0f }, 24.0f);
     g.drawLine (465.0f, 754.0f, 745.0f, 754.0f, 1.0f);
-    drawCentred (g, "INPUT", { 874.0f, 711.0f }, 13.0f);
-    drawCentred (g, "OUTPUT", { 978.0f, 711.0f }, 13.0f);
+    drawCentred (g, "INPUT", { 884.0f, 708.0f }, 19.0f);
+    drawCentred (g, "OUTPUT", { 986.0f, 708.0f }, 19.0f);
 
     g.drawLine (79.0f, 998.0f, 777.0f, 998.0f, 1.0f);
-    theme::drawBitmapText (g, "COLOR", { 101.0f, 970.0f, 100.0f, 16.0f }, 16.0f);
+    drawCentred (g, "COLOR", { 146.0f, 978.0f }, 24.0f);
 
-    constexpr float knobX[] = { 118.0f, 236.0f, 354.0f, 472.0f, 590.0f, 708.0f };
+    constexpr float knobX[] = { 138.0f, 252.0f, 366.0f, 480.0f, 594.0f, 708.0f };
     constexpr const char* knobNames[] = { "DRIVE", "BITS", "RATE", "ALIAS", "NOISE", "CHARACTER" };
     for (int i = 0; i < 6; ++i)
-        drawCentred (g, knobNames[i], { knobX[i], 1105.0f }, 12.0f);
+        drawCentred (g, knobNames[i], { knobX[i], 1018.0f }, 18.0f);
 
     for (int i : { 0, 2, 4, 5 })
     {
-        const juce::Point<float> centre (knobX[i], 1052.0f);
-        drawCentred (g, "0%", polarPoint (centre, 225.0f, 52.0f), 9.0f);
-        drawCentred (g, "100%", polarPoint (centre, 135.0f, 52.0f), 9.0f);
+        drawCentred (g, "0%", { knobX[i] - 34.0f, 1106.0f }, 17.0f);
+        drawCentred (g, "100%", { knobX[i] + 34.0f, 1106.0f }, 17.0f);
     }
-    drawCentred (g, "SMOOTH", polarPoint ({ knobX[3], 1052.0f }, 225.0f, 58.0f), 7.0f);
-    drawCentred (g, "GRITTY", polarPoint ({ knobX[3], 1052.0f }, 135.0f, 58.0f), 7.0f);
 
-    constexpr const char* bitLabels[] = { "16", "12", "8", "4" };
-    constexpr float bitAngles[] = { 225.0f, 315.0f, 45.0f, 135.0f };
-    for (int i = 0; i < 4; ++i)
-        drawCentred (g, bitLabels[i], polarPoint ({ knobX[1], 1052.0f }, bitAngles[i], 54.0f), 9.0f);
+    drawCentred (g, "16", { knobX[1] - 36.0f, 1106.0f }, 17.0f);
+    drawCentred (g, "4", { knobX[1] + 36.0f, 1106.0f }, 17.0f);
+    drawCentred (g, "12", { knobX[1] - 38.0f, 1036.0f }, 17.0f);
+    drawCentred (g, "8", { knobX[1] + 38.0f, 1036.0f }, 17.0f);
+    drawCentred (g, "SMOOTH", { knobX[3] - 30.0f, 1110.0f }, 12.0f);
+    drawCentred (g, "GRITTY", { knobX[3] + 30.0f, 1110.0f }, 12.0f);
 
-    drawCentred (g, "IN", { 873.0f, 1118.0f }, 14.0f);
-    drawCentred (g, "OUT", { 980.0f, 1118.0f }, 14.0f);
+    drawCentred (g, "IN", { 873.0f, 1116.0f }, 22.0f);
+    drawCentred (g, "OUT", { 980.0f, 1116.0f }, 22.0f);
 
-    const juce::Point<float> freqCentre (680.0f, 841.0f);
+    const juce::Point<float> freqCentre (680.0f, 852.0f);
     const float start = juce::MathConstants<float>::pi * 1.25f;
     const float end = juce::MathConstants<float>::pi * 2.75f;
     juce::NormalisableRange<float> freqRange (20.0f, 500.0f, 1.0f);
@@ -87,9 +84,8 @@ void paintLabels (juce::Graphics& g, bool)
     for (auto [hz, label] : marks)
     {
         const float angle = start + freqRange.convertTo0to1 (hz) * (end - start);
-        const float radius = hz == 100.0f ? 79.0f : 90.0f;
-        drawCentred (g, label, { freqCentre.x + std::sin (angle) * radius,
-                                 freqCentre.y - std::cos (angle) * radius }, 18.0f);
+        drawCentred (g, label, { freqCentre.x + std::sin (angle) * 82.0f,
+                                 freqCentre.y - std::cos (angle) * 82.0f }, 20.0f);
     }
 }
 } // namespace junky

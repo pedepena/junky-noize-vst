@@ -5,7 +5,6 @@
 
 #include "PluginProcessor.h"
 #include "ui/KnobLookAndFeel.h"
-#include "ui/ABSwitch.h"
 #include "ui/LcdDisplay.h"
 #include "ui/LevelMeter.h"
 #include "ui/PanelButton.h"
@@ -34,19 +33,17 @@ private:
     juce::Slider driveKnob, bitsKnob, rateKnob, aliasKnob, noiseKnob, characterKnob;
 
     junky::PanelButton saveButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, false };
-    junky::PanelButton bassButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
+    junky::PanelButton bassButton { junky::PanelButton::Style::agedKey, junky::theme::ledRed, junky::theme::ledGreen, true };
     junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
     junky::PanelButton stereoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
     junky::PanelButton presetUpButton { junky::PanelButton::Style::arrowUp };
     junky::PanelButton presetDownButton { junky::PanelButton::Style::arrowDown };
-    junky::ABSwitch abSwitch;
 
     junky::LcdDisplay lcd;
     junky::LevelMeter inputMeter, outputMeter;
 
     float inputDisplayDb = -100.0f;
     float outputDisplayDb = -100.0f;
-    bool displayedSlotB = false;
 
     juce::Image background;
 

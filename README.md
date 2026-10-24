@@ -1,6 +1,6 @@
 # Junky Noize
 
-Efecto de audio VST3 (y AU en macOS) con controles de entrada/salida, mezcla, filtro, realce de graves, mono/estéreo, A/B y presets. Los modelos de máquinas de sampleo están previstos para una fase posterior; todavía no forman parte del motor de audio.
+Efecto de audio VST3 (y AU en macOS) con controles de entrada/salida, mezcla, filtro, realce de graves, mono/estéreo y presets. Los modelos de máquinas de sampleo están previstos para una fase posterior; todavía no forman parte del motor de audio.
 
 ## Descargar e instalar
 

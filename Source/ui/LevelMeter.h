@@ -46,11 +46,12 @@ public:
             if (i % 2 == 0)
             {
                 const juce::String text = juce::String ((int) threshold);
-                const juce::Rectangle<float> label (bar.getRight() + 5.0f,
+                const juce::Rectangle<float> segmentBounds (bar.getX(),
                     bar.getBottom() - 3.0f - (float) (i + 1) * segmentHeight,
-                    bounds.getRight() - bar.getRight() - 5.0f, segmentHeight);
-                g.setColour (theme::ink);
-                theme::drawBitmapText (g, text, label, 9.0f);
+                    bounds.getWidth(), segmentHeight);
+                const float labelLeft = bar.getRight() + bounds.getWidth() * 0.06f;
+                theme::drawPanelText (g, text, labelLeft + 200.0f, segmentBounds.getCentreY(),
+                                      segmentHeight * 1.03f, juce::Justification::centredLeft);
             }
         }
     }

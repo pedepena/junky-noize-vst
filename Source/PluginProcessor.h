@@ -46,10 +46,8 @@ public:
     int getCurrentPreset() const { return currentPreset.load(); }
     void selectPreset (int index);
     int saveCustomPreset();
-
-    /** Cambia entre los ajustes A y B (para comparar dos sonidos). */
-    void toggleAB();
-    bool isSlotB() const { return activeSlot.load() == 1; }
+    int getEditorWidth() const { return editorWidth.load(); }
+    void setEditorWidth (int width) { editorWidth.store (width); }
 
     /** Cambia un parametro avisando al DAW (para que se pueda automatizar). */
     void setParameterPlain (const juce::String& parameterId, float plainValue);
@@ -95,8 +93,7 @@ private:
 
     std::atomic<int> currentPreset { 0 };
     std::atomic<int> currentMachine { -1 };
-    std::atomic<int> activeSlot { 0 };
-    juce::ValueTree slotState[2];
+    std::atomic<int> editorWidth { 0 };
     void updateMachineFilters (float character);
     int lastMachine = -2;
     float lastCharacter = -1.0f;

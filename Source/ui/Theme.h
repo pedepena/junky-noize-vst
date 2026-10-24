@@ -22,6 +22,21 @@ inline const juce::Colour lcdText { 0xff17240f };
 inline const juce::Colour ledRed { 0xffff3b2f };
 inline const juce::Colour ledGreen { 0xff62e06a };
 
+inline juce::Font panelFont (float height)
+{
+    return juce::Font (juce::FontOptions ("Arial", height, juce::Font::bold));
+}
+
+inline void drawPanelText (juce::Graphics& g, const juce::String& text,
+                           float centreX, float centreY, float height,
+                           juce::Justification justification = juce::Justification::centred)
+{
+    g.setColour (ink);
+    g.setFont (panelFont (height));
+    g.drawText (text, juce::Rectangle<float> (400.0f, height * 1.5f).withCentre ({ centreX, centreY }),
+                justification, false);
+}
+
 inline std::array<std::uint8_t, 7> bitmapGlyph (juce::juce_wchar character)
 {
     using Rows = std::array<std::uint8_t, 7>;
