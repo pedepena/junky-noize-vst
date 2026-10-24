@@ -396,7 +396,7 @@ bool JunkyNoizeAudioProcessor::saveUserPreset (const juce::String& name, bool re
     tree.setProperty ("machine", juce::jlimit (-1, 38, currentMachine.load()), nullptr);
     auto xml = tree.createXml();
     if (xml == nullptr || ! xml->writeTo (target)) return false;
-    if (oldName.isNotEmpty() && ! oldName.equals (name))
+    if (oldName.isNotEmpty() && oldName != name)
         dir.getChildFile (oldName + ".xml").deleteFile();
     refreshUserPresets();
     currentPreset.store (0);
