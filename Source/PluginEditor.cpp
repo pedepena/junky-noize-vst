@@ -73,12 +73,9 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     addAndMakeVisible (stereoButton);
 
     // Pantalla de presets
-    juce::StringArray names;
-    for (const auto& preset : junky::factoryPresets)
-        names.add (preset.name);
-
-    lcd.setItems (names);
-    lcd.setSelected (audioProcessor.getCurrentPreset());
+    audioProcessor.refreshUserPresets();
+    lcd.setItems (audioProcessor.getPresetNames());
+    lcd.setSelected (audioProcessor.getLcdSelectionIndex());
     lcd.onSelect = [this] (int index) { audioProcessor.selectPreset (index); };
     addAndMakeVisible (lcd);
 
@@ -89,10 +86,55 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     saveButton.setLabel ("SAVE");
     saveButton.onClick = [this]
     {
-        const int slot = audioProcessor.saveCustomPreset();
-        lcd.setHeader (slot >= 0 ? "SAVED TO CUSTOM " + juce::String (slot + 1) : "SELECT A CUSTOM SLOT", slot >= 0 ? 1200 : 1500);
+        juce::String initial;
+        const int selected = lcd.getSelected();
+        if (selected >= 51) initial = audioProcessor.getPresetNames()[selected];
+        auto* alert = new juce::AlertWindow ("Save preset",
+            "Name (max 18 characters: letters, numbers, space, - & ( ) )", juce::AlertWindow::NoIcon);
+        alert->addTextEditor ("name", initial);
+        alert->addButton ("Save", 1, juce::KeyPress (juce::KeyPress::returnKey));
+        alert->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+        juce::Component::SafePointer<JunkyNoizeAudioProcessorEditor> safeEditor (this);
+        juce::Component::SafePointer<juce::AlertWindow> safeAlert (alert);
+        alert->enterModalState (true, juce::ModalCallbackFunction::create ([safeEditor, safeAlert] (int result)
+        {
+            if (safeEditor == nullptr || safeAlert == nullptr || result != 1) return;
+            auto name = safeAlert->getTextEditorContents ("name");
+            name.retainCharacters ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -&()");
+            name = name.trim().substring (0, 18);
+            if (name.isEmpty()) { safeEditor->lcd.setHeader ("ENTER A NAME", 1500); return; }
+            auto save = [safeEditor, name]
+            {
+                if (safeEditor == nullptr) return;
+                if (! safeEditor->audioProcessor.saveUserPreset (name, true))
+                { safeEditor->lcd.setHeader ("SAVE FAILED", 1500); return; }
+                safeEditor->lcd.setItems (safeEditor->audioProcessor.getPresetNames());
+                safeEditor->lcd.setSelected (safeEditor->audioProcessor.getLcdSelectionIndex());
+                safeEditor->lcd.setHeader ("SAVED: " + name, 1200);
+            };
+            const auto names = safeEditor->audioProcessor.getPresetNames();
+            bool duplicate = false;
+            for (int i = 51; i < names.size(); ++i)
+                if (names[i].equalsIgnoreCase (name)) { duplicate = true; break; }
+            if (! duplicate) { save(); return; }
+            auto* replace = new juce::AlertWindow ("Replace preset", "Replace preset " + name + "?",
+                                                   juce::AlertWindow::NoIcon);
+            replace->addButton ("Replace", 1, juce::KeyPress (juce::KeyPress::returnKey));
+            replace->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+            replace->enterModalState (true, juce::ModalCallbackFunction::create ([save] (int replaceResult)
+            { if (replaceResult == 1) save(); }), true);
+        }), true);
     };
     addAndMakeVisible (saveButton);
+
+    folderButton.onClick = [this]
+    {
+        auto dir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+            .getChildFile ("Junky Noize").getChildFile ("Presets");
+        dir.createDirectory();
+        if (! dir.startAsProcess()) lcd.setHeader ("CANNOT OPEN FOLDER", 1500);
+    };
+    addAndMakeVisible (folderButton);
 
     addAndMakeVisible (inputMeter);
     addAndMakeVisible (outputMeter);
@@ -166,6 +208,7 @@ void JunkyNoizeAudioProcessorEditor::resized()
     presetUpButton.setBounds (fromDesign (787, 70, 78, 85));
     presetDownButton.setBounds (fromDesign (787, 165, 78, 85));
     saveButton.setBounds (fromDesign (787, 258, 78, 34));
+    folderButton.setBounds (fromDesign (960, 262, 64, 46));
 
     filterKnob.setBounds (fromDesign (192, 443, 170, 170));
     mixKnob.setBounds (fromDesign (390, 327, 300, 300));
@@ -204,7 +247,16 @@ void JunkyNoizeAudioProcessorEditor::timerCallback()
     monoButton.setToggleState (isMono, juce::dontSendNotification);
     stereoButton.setToggleState (! isMono, juce::dontSendNotification);
 
-    // Preset elegido (por ejemplo, al cargar un proyecto)
-    lcd.setSelected (audioProcessor.getCurrentPreset());
+    // Actualiza presets nuevos o borrados sin bloquear el audio.
+    if (++presetRefreshTicks >= 60)
+    {
+        presetRefreshTicks = 0;
+        if (audioProcessor.refreshUserPresets())
+        {
+            lcd.setItems (audioProcessor.getPresetNames());
+            lcd.setSelected (audioProcessor.getLcdSelectionIndex());
+        }
+    }
+    lcd.setSelected (audioProcessor.getLcdSelectionIndex());
 
 }
