@@ -172,7 +172,8 @@ public:
         else
         {
             juce::Path arrow;
-            const auto c = bounds.getCentre();
+            const float sink = isButtonDown ? 1.5f : 0.0f;
+            const auto c = bounds.getCentre().translated (0.0f, sink);
             const float size = bounds.getWidth() * 0.22f;
 
             if (style == Style::arrowUp)
@@ -180,8 +181,23 @@ public:
             else
                 arrow.addTriangle (c.x, c.y + size, c.x - size, c.y - size * 0.7f, c.x + size, c.y - size * 0.7f);
 
-            g.setColour (theme::ink.withAlpha (0.9f));
+            // Las flechas deben seguir claras; no volver a dibujarlas en negro.
+            const auto arrowColour = theme::presetArrow.brighter (isMouseOver ? 0.07f : 0.0f);
+            g.setColour (arrowColour.withAlpha (isMouseOver ? 0.98f : 0.88f));
             g.fillPath (arrow);
+
+            // Pequeñas muescas semitransparentes, recortadas dentro de la flecha, simulan grabado gastado.
+            juce::Graphics::ScopedSaveState arrowWearState (g);
+            g.reduceClipRegion (arrow);
+            juce::Random wear (style == Style::arrowUp ? 2719 : 8143);
+            for (int i = 0; i < 5; ++i)
+            {
+                const float y = c.y + (wear.nextFloat() - 0.5f) * size * 0.9f;
+                const float halfLength = size * (0.08f + wear.nextFloat() * 0.16f);
+                const float x = c.x + (wear.nextFloat() - 0.5f) * size * 0.25f;
+                g.setColour (theme::presetArrow.darker (0.18f).withAlpha (0.24f + wear.nextFloat() * 0.20f));
+                g.drawLine (x - halfLength, y, x + halfLength, y, 0.7f + wear.nextFloat() * 0.5f);
+            }
         }
 
         if (isKey && label.isNotEmpty())
