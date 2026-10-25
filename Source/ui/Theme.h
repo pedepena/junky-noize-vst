@@ -17,6 +17,7 @@ inline const juce::Colour metalDark { 0xff5d5f5c };
 inline const juce::Colour ink { 0xff161616 };
 inline const juce::Colour rust { 0xff8c4a20 };
 inline const juce::Colour cream { 0xffd9d4bd };
+inline const juce::Colour presetArrow { 0xffd0cbbf };
 inline const juce::Colour lcdBackground { 0xff7fc46b };
 inline const juce::Colour lcdText { 0xff17240f };
 inline const juce::Colour ledRed { 0xffff3b2f };
