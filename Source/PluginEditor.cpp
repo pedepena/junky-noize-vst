@@ -136,6 +136,8 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     };
     addAndMakeVisible (folderButton);
 
+    inputMeter.setComponentID ("input-meter");
+    outputMeter.setComponentID ("output-meter");
     addAndMakeVisible (inputMeter);
     addAndMakeVisible (outputMeter);
 
