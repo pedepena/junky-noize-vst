@@ -3,7 +3,7 @@
 
 namespace
 {
-constexpr int initialWidth = 760;
+constexpr int initialWidth = 1064;
 constexpr int initialHeight = (int) (initialWidth * junky::theme::designHeight / junky::theme::designWidth);
 } // namespace
 
@@ -142,9 +142,15 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     setResizable (true, true);
     setResizeLimits (initialWidth / 2, initialHeight / 2, initialWidth * 2, initialHeight * 2);
     getConstrainer()->setFixedAspectRatio ((double) junky::theme::designWidth / (double) junky::theme::designHeight);
-    const int saved = audioProcessor.getEditorWidth();
-    const int width = saved > 0 ? juce::jlimit (initialWidth / 2, initialWidth * 2, saved) : initialWidth;
-    setSize (width, juce::roundToInt ((float) width * junky::theme::designHeight / junky::theme::designWidth));
+    const auto saved = audioProcessor.getEditorSize();
+    const int minWidth = initialWidth / 2, maxWidth = initialWidth * 2;
+    const int minHeight = initialHeight / 2, maxHeight = initialHeight * 2;
+    const int width = saved.x > 0 ? juce::jlimit (minWidth, maxWidth, saved.x)
+                                  : saved.y > 0 ? juce::roundToInt ((float) saved.y * junky::theme::designWidth / junky::theme::designHeight)
+                                                : initialWidth;
+    const int height = saved.y > 0 ? juce::jlimit (minHeight, maxHeight, saved.y)
+                                   : juce::roundToInt ((float) width * junky::theme::designHeight / junky::theme::designWidth);
+    setSize (width, height);
 
     startTimerHz (30);
 }
@@ -199,8 +205,8 @@ void JunkyNoizeAudioProcessorEditor::paint (juce::Graphics& g)
 
 void JunkyNoizeAudioProcessorEditor::resized()
 {
-    if (getWidth() >= initialWidth / 2)
-        audioProcessor.setEditorWidth (getWidth());
+    if (getWidth() >= initialWidth / 2 && getHeight() >= initialHeight / 2)
+        audioProcessor.setEditorSize (getWidth(), getHeight());
 
     rebuildBackground();
 
