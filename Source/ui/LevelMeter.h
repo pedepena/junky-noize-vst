@@ -3,6 +3,7 @@
 #include <cmath>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "Theme.h"
+#include "WearTexture.h"
 
 namespace junky
 {
@@ -53,6 +54,13 @@ public:
                 theme::drawPanelText (g, text, labelLeft + 200.0f, segmentBounds.getCentreY(),
                                       segmentHeight * 1.03f, juce::Justification::centredLeft);
             }
+        }
+
+        // Rasguños suaves sobre el cristal, limitados a la barra para no apagar los LEDs.
+        {
+            juce::Graphics::ScopedSaveState wearState (g);
+            g.reduceClipRegion (bar.toNearestInt());
+            wear::draw (g, bar, wear::Surface::meter, getComponentID().hashCode());
         }
     }
 
