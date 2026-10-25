@@ -1,5 +1,6 @@
 #include "KnobLookAndFeel.h"
 #include "Theme.h"
+#include "WearTexture.h"
 
 namespace junky
 {
@@ -62,20 +63,16 @@ void KnobLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int wid
         g.setGradientFill (cap);
         g.fillEllipse (centre.x - inner, centre.y - inner, inner * 2.0f, inner * 2.0f);
 
-        // Desgaste: puntitos claros en posiciones fijas (siempre los mismos)
-        juce::Random wear (1234);
-        g.setColour (juce::Colour (0xff8a8a85).withAlpha (0.35f));
-
-        for (int i = 0; i < 26; ++i)
-        {
-            const float a = wear.nextFloat() * juce::MathConstants<float>::twoPi;
-            const float d = std::sqrt (wear.nextFloat()) * inner * 0.92f;
-            const float s = 0.8f + wear.nextFloat() * (capRadius * 0.05f);
-            g.fillEllipse (centre.x + std::cos (a) * d - s * 0.5f, centre.y + std::sin (a) * d - s * 0.5f, s, s * 0.7f);
-        }
-
         g.setColour (juce::Colours::white.withAlpha (0.10f));
         g.drawEllipse (centre.x - inner, centre.y - inner, inner * 2.0f, inner * 2.0f, 1.0f);
+    }
+
+    // Textura fija e individual para cada knob, también desgasta el aro exterior.
+    {
+        juce::Graphics::ScopedSaveState wearState (g);
+        g.reduceClipRegion (bounds.toNearestInt());
+        const int wearSeed = (int) slider.getProperties().getWithDefault ("wearSeed", 1234);
+        wear::draw (g, bounds, wear::Surface::knob, wearSeed);
     }
 
     // Aguja

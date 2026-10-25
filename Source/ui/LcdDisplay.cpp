@@ -1,5 +1,6 @@
 #include "LcdDisplay.h"
 #include "Theme.h"
+#include "WearTexture.h"
 
 namespace junky
 {
@@ -110,6 +111,13 @@ void LcdDisplay::paint (juce::Graphics& g)
         g.setColour (isSelected ? theme::lcdBackground : theme::lcdText);
         theme::drawBitmapText (g, juce::String (index).paddedLeft ('0', 2) + "  " + items[index],
                                rowBounds.withTrimmedLeft (rowHeight * 1.0f), fontSize);
+    }
+
+    // Cristal con polvo, rayas finas y esquinas oscurecidas; el texto sigue nítido.
+    {
+        juce::Graphics::ScopedSaveState wearState (g);
+        g.reduceClipRegion (getLocalBounds());
+        wear::draw (g, bounds, wear::Surface::lcd, 7139);
     }
 }
 

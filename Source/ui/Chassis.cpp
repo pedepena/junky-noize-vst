@@ -1,5 +1,6 @@
 #include "Chassis.h"
 #include "Theme.h"
+#include "WearTexture.h"
 #include "BinaryData.h"
 
 #include <cmath>
@@ -29,6 +30,9 @@ void paintChassis (juce::Graphics& g)
                      0, 0, image.getWidth(), image.getHeight());
     else
         g.fillAll (theme::metalMid);
+
+    // Capa fija de rozaduras, polvo y pintura saltada; se crea una vez y no cambia al repintar.
+    wear::draw (g, { 0.0f, 0.0f, theme::designWidth, theme::designHeight }, wear::Surface::panel, 40125);
 }
 
 void paintLabels (juce::Graphics& g)
@@ -87,5 +91,8 @@ void paintLabels (juce::Graphics& g)
         drawCentred (g, label, { freqCentre.x + std::sin (angle) * 82.0f,
                                  freqCentre.y - std::cos (angle) * 82.0f }, 20.0f);
     }
+
+    // Desgaste sutil sobre las letras y escalas: conserva su posición y su lectura.
+    wear::draw (g, { 0.0f, 0.0f, theme::designWidth, theme::designHeight }, wear::Surface::lettering, 67219);
 }
 } // namespace junky
