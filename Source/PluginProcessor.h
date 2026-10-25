@@ -49,8 +49,12 @@ public:
     bool refreshUserPresets();
     void selectPreset (int index);
     bool saveUserPreset (const juce::String& name, bool replaceExisting);
-    int getEditorWidth() const { return editorWidth.load(); }
-    void setEditorWidth (int width) { editorWidth.store (width); }
+    juce::Point<int> getEditorSize() const { return { editorWidth.load(), editorHeight.load() }; }
+    void setEditorSize (int width, int height)
+    {
+        editorWidth.store (width);
+        editorHeight.store (height);
+    }
 
     /** Cambia un parametro avisando al DAW (para que se pueda automatizar). */
     void setParameterPlain (const juce::String& parameterId, float plainValue);
@@ -100,6 +104,7 @@ private:
     juce::String selectedUserPreset;
     std::atomic<int> currentMachine { -1 };
     std::atomic<int> editorWidth { 0 };
+    std::atomic<int> editorHeight { 0 };
     void updateMachineFilters (float character);
     int lastMachine = -2;
     float lastCharacter = -1.0f;
