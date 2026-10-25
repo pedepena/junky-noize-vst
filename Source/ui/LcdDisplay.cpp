@@ -112,7 +112,6 @@ void LcdDisplay::paint (juce::Graphics& g)
         theme::drawBitmapText (g, juce::String (index).paddedLeft ('0', 2) + "  " + items[index],
                                rowBounds.withTrimmedLeft (rowHeight * 1.0f), fontSize);
     }
-    }
 
     // Cristal con polvo, rayas finas y esquinas oscurecidas; el texto sigue nítido.
     {
