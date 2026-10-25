@@ -169,6 +169,7 @@ void JunkyNoizeAudioProcessorEditor::setupKnob (juce::Slider& knob)
     knob.setRotaryParameters (juce::MathConstants<float>::pi * 1.25f, juce::MathConstants<float>::pi * 2.75f, true);
     knob.setPopupDisplayEnabled (true, true, this);
     knob.setLookAndFeel (&knobLook);
+    knob.getProperties().set ("wearSeed", nextKnobWearSeed++);
     addAndMakeVisible (knob);
 }
 
