@@ -411,6 +411,7 @@ void JunkyNoizeAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     { const juce::ScopedLock lock (userPresetLock); state.setProperty ("userPreset", selectedUserPreset, nullptr); }
     state.setProperty ("machine", currentMachine.load(), nullptr);
     state.setProperty ("editorWidth", editorWidth.load(), nullptr);
+    state.setProperty ("editorHeight", editorHeight.load(), nullptr);
     if (auto xml = state.createXml()) copyXmlToBinary (*xml, destData);
 }
 
@@ -423,6 +424,7 @@ void JunkyNoizeAudioProcessor::setStateInformation (const void* data, int sizeIn
             const int restoredPreset = juce::jlimit (0, 50, (int) tree.getProperty ("preset", 0));
             const auto restoredUser = tree.getProperty ("userPreset", juce::String()).toString();
             editorWidth.store (juce::jlimit (0, 100000, (int) tree.getProperty ("editorWidth", 0)));
+            editorHeight.store (juce::jlimit (0, 100000, (int) tree.getProperty ("editorHeight", 0)));
             apvts.replaceState (tree);
             currentMachine.store (juce::jlimit (-1, 38, (int) tree.getProperty ("machine", -1)));
             currentPreset.store (restoredPreset);
