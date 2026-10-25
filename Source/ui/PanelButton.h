@@ -3,6 +3,7 @@
 #include <cmath>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "Theme.h"
+#include "WearTexture.h"
 
 namespace junky
 {
@@ -15,8 +16,8 @@ public:
     explicit PanelButton (Style s = Style::key,
                           juce::Colour off = theme::ledRed,
                           juce::Colour on = theme::ledGreen,
-                          bool showLed = true)
-        : juce::Button ({}), style (s), ledOffColour (off), ledOnColour (on), hasLed (showLed)
+                          bool showLed = true, int fixedWearSeed = 4321)
+        : juce::Button ({}), style (s), ledOffColour (off), ledOnColour (on), hasLed (showLed), wearSeed (fixedWearSeed)
     {
     }
 
@@ -52,47 +53,10 @@ public:
             g.setGradientFill (gradient);
             g.fillRoundedRectangle (faceBounds, 0.07f * w);
 
-            juce::Random wear (4321);
             {
                 juce::Graphics::ScopedSaveState wearState (g);
                 g.reduceClipRegion (faceBounds.toNearestInt());
-                for (int i = 0; i < 16; ++i)
-            {
-                const float x = faceBounds.getX() + wear.nextFloat() * faceBounds.getWidth();
-                const float y = faceBounds.getY() + wear.nextFloat() * faceBounds.getHeight();
-                const float length = w * (0.12f + 0.33f * wear.nextFloat());
-                const float angle = wear.nextFloat() * juce::MathConstants<float>::twoPi;
-                g.setColour (juce::Colour (0xff5b5648).withAlpha (0.30f));
-                g.drawLine (x, y, x + std::cos (angle) * length, y + std::sin (angle) * length, 1.0f);
-            }
-                for (int i = 0; i < 45; ++i)
-            {
-                const float size = 1.0f + 2.0f * wear.nextFloat();
-                const float x = faceBounds.getX() + wear.nextFloat() * (faceBounds.getWidth() - size);
-                const float y = faceBounds.getY() + wear.nextFloat() * (faceBounds.getHeight() - size);
-                g.setColour (juce::Colour (0xff7a5b3a).withAlpha (0.30f));
-                g.fillEllipse (x, y, size, size);
-            }
-                for (int i = 0; i < 6; ++i)
-            {
-                    const float along = wear.nextFloat();
-                    const float jitter = (wear.nextFloat() - 0.5f) * 0.08f * w;
-                    const float size = 3.0f + 3.0f * wear.nextFloat();
-                    float x = faceBounds.getX(), y = faceBounds.getY();
-                    switch (i)
-                {
-                    case 0: x += jitter; y += along * 0.08f * h; break;
-                    case 1: x = faceBounds.getRight() - size + jitter; y += along * faceBounds.getHeight(); break;
-                    case 2: x += along * faceBounds.getWidth(); y += jitter; break;
-                    case 3: x += along * faceBounds.getWidth(); y = faceBounds.getBottom() - size + jitter; break;
-                    case 4: x += jitter; y = faceBounds.getBottom() - size + along * 0.08f * h; break;
-                    default: x = faceBounds.getRight() - size + jitter; y = faceBounds.getBottom() - size + jitter; break;
-                }
-                    x = juce::jlimit (faceBounds.getX(), faceBounds.getRight() - size, x);
-                    y = juce::jlimit (faceBounds.getY(), faceBounds.getBottom() - size, y);
-                    g.setColour (juce::Colour (0xff6e4a2a).withAlpha (0.18f));
-                    g.fillEllipse (x, y, size, size);
-                }
+                wear::draw (g, faceBounds, wear::Surface::key, wearSeed);
             }
 
             g.setColour (juce::Colour (0xff8a8571).withAlpha (0.5f));
@@ -129,6 +93,11 @@ public:
             g.fillRoundedRectangle (bounds, corner);
             g.setColour (juce::Colours::black.withAlpha (0.55f));
             g.drawRoundedRectangle (bounds, corner, 1.5f);
+            {
+                juce::Graphics::ScopedSaveState wearState (g);
+                g.reduceClipRegion (bounds.toNearestInt());
+                wear::draw (g, bounds, wear::Surface::key, wearSeed);
+            }
 
             if (hasLed)
             {
@@ -154,6 +123,11 @@ public:
             g.fillRoundedRectangle (bounds, corner);
             g.setColour (juce::Colours::black.withAlpha (0.55f));
             g.drawRoundedRectangle (bounds, corner, 1.5f);
+            {
+                juce::Graphics::ScopedSaveState wearState (g);
+                g.reduceClipRegion (bounds.toNearestInt());
+                wear::draw (g, bounds, wear::Surface::button, wearSeed);
+            }
             const float x = bounds.getCentreX(), y = bounds.getCentreY();
             const float w = bounds.getWidth() * 0.46f, h = bounds.getHeight() * 0.43f;
             juce::Path folder;
@@ -186,17 +160,11 @@ public:
             g.setColour (arrowColour.withAlpha (isMouseOver ? 0.98f : 0.88f));
             g.fillPath (arrow);
 
-            // Pequeñas muescas semitransparentes, recortadas dentro de la flecha, simulan grabado gastado.
-            juce::Graphics::ScopedSaveState arrowWearState (g);
-            g.reduceClipRegion (arrow);
-            juce::Random wear (style == Style::arrowUp ? 2719 : 8143);
-            for (int i = 0; i < 5; ++i)
+            // La textura se crea una sola vez y se recorta dentro de cada flecha.
             {
-                const float y = c.y + (wear.nextFloat() - 0.5f) * size * 0.9f;
-                const float halfLength = size * (0.08f + wear.nextFloat() * 0.16f);
-                const float x = c.x + (wear.nextFloat() - 0.5f) * size * 0.25f;
-                g.setColour (theme::presetArrow.darker (0.18f).withAlpha (0.24f + wear.nextFloat() * 0.20f));
-                g.drawLine (x - halfLength, y, x + halfLength, y, 0.7f + wear.nextFloat() * 0.5f);
+                juce::Graphics::ScopedSaveState wearState (g);
+                g.reduceClipRegion (arrow);
+                wear::draw (g, bounds, wear::Surface::arrow, wearSeed);
             }
         }
 
@@ -208,6 +176,7 @@ private:
     Style style;
     juce::Colour ledOffColour, ledOnColour;
     bool hasLed;
+    int wearSeed;
     juce::String label;
 };
 } // namespace junky
