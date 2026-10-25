@@ -66,6 +66,13 @@ void LcdDisplay::paint (juce::Graphics& g)
     const float fontSize = rowHeight * 0.72f;
     const float padding = bounds.getWidth() * 0.025f;
 
+    // Fantasma muy tenue de una impresión antigua, por debajo del texto actual.
+    g.setColour (theme::lcdText.withAlpha (0.07f));
+    theme::drawBitmapText (g, "OLD PRESET",
+                           juce::Rectangle<float> (padding * 2.0f, 0.0f,
+                                                   bounds.getWidth() - padding * 4.0f, headerHeight),
+                           fontSize * 0.66f);
+
     // Matriz de pixeles fija: la fuente no depende del sistema operativo.
     g.setColour (theme::lcdText);
     theme::drawBitmapText (g, header,
