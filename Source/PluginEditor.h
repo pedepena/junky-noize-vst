@@ -33,13 +33,13 @@ private:
     juce::Slider filterKnob, mixKnob, bassFreqKnob, inputKnob, outputKnob, drunkKnob;
     juce::Slider driveKnob, bitsKnob, rateKnob, aliasKnob, noiseKnob, characterKnob;
 
-    junky::PanelButton folderButton { junky::PanelButton::Style::folder, junky::theme::ledRed, junky::theme::ledGreen, false };
-    junky::PanelButton saveButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, false };
-    junky::PanelButton bassButton { junky::PanelButton::Style::agedKey, junky::theme::ledRed, junky::theme::ledGreen, true };
-    junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
-    junky::PanelButton stereoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
-    junky::PanelButton presetUpButton { junky::PanelButton::Style::arrowUp };
-    junky::PanelButton presetDownButton { junky::PanelButton::Style::arrowDown };
+    junky::PanelButton folderButton { junky::PanelButton::Style::folder, junky::theme::ledRed, junky::theme::ledGreen, false, 1007 };
+    junky::PanelButton saveButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, false, 2011 };
+    junky::PanelButton bassButton { junky::PanelButton::Style::agedKey, junky::theme::ledRed, junky::theme::ledGreen, true, 3019 };
+    junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true, 4021 };
+    junky::PanelButton stereoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true, 5023 };
+    junky::PanelButton presetUpButton { junky::PanelButton::Style::arrowUp, junky::theme::ledRed, junky::theme::ledGreen, false, 6037 };
+    junky::PanelButton presetDownButton { junky::PanelButton::Style::arrowDown, junky::theme::ledRed, junky::theme::ledGreen, false, 6043 };
 
     junky::LcdDisplay lcd;
     junky::LevelMeter inputMeter, outputMeter;
