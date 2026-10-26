@@ -5,8 +5,12 @@
 
 namespace
 {
-constexpr int initialWidth = 1064;
-constexpr int initialHeight = (int) (initialWidth * junky::theme::designHeight / junky::theme::designWidth);
+constexpr int minimumWidth = 800;
+constexpr int initialWidth = 1400;
+constexpr int maximumWidth = 2000;
+constexpr int initialHeight = (int) (initialWidth * junky::theme::designHeight / junky::theme::designWidth + 0.5f);
+constexpr int minimumHeight = (int) (minimumWidth * junky::theme::designHeight / junky::theme::designWidth + 0.5f);
+constexpr int maximumHeight = (int) (maximumWidth * junky::theme::designHeight / junky::theme::designWidth + 0.5f);
 } // namespace
 
 JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioProcessor& p)
@@ -157,16 +161,14 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     outputMeter.setVisible (false);
 
     setResizable (true, true);
-    setResizeLimits (initialWidth / 2, initialHeight / 2, initialWidth * 2, initialHeight * 2);
+    setResizeLimits (minimumWidth, minimumHeight, maximumWidth, maximumHeight);
     getConstrainer()->setFixedAspectRatio ((double) junky::theme::designWidth / (double) junky::theme::designHeight);
     const auto saved = audioProcessor.getEditorSize();
-    const int minWidth = initialWidth / 2, maxWidth = initialWidth * 2;
-    const int minHeight = initialHeight / 2, maxHeight = initialHeight * 2;
-    const int width = saved.x > 0 ? juce::jlimit (minWidth, maxWidth, saved.x)
-                                  : saved.y > 0 ? juce::roundToInt ((float) saved.y * junky::theme::designWidth / junky::theme::designHeight)
+    const int width = saved.x > 0 ? juce::jlimit (minimumWidth, maximumWidth, saved.x)
+                                  : saved.y > 0 ? juce::jlimit (minimumWidth, maximumWidth,
+                                        juce::roundToInt ((float) saved.y * junky::theme::designWidth / junky::theme::designHeight))
                                                 : initialWidth;
-    const int height = saved.y > 0 ? juce::jlimit (minHeight, maxHeight, saved.y)
-                                   : juce::roundToInt ((float) width * junky::theme::designHeight / junky::theme::designWidth);
+    const int height = juce::roundToInt ((float) width * junky::theme::designHeight / junky::theme::designWidth);
     setSize (width, height);
 
     startTimerHz (30);
@@ -214,34 +216,34 @@ void JunkyNoizeAudioProcessorEditor::paint (juce::Graphics& g)
 
 void JunkyNoizeAudioProcessorEditor::resized()
 {
-    if (getWidth() >= initialWidth / 2 && getHeight() >= initialHeight / 2)
+    if (getWidth() >= minimumWidth && getWidth() <= maximumWidth)
         audioProcessor.setEditorSize (getWidth(), getHeight());
 
     rebuildBackground();
 
-    filterKnob.setBounds (fromDesign (junky::layout::filterKnob.x, junky::layout::filterKnob.y,
+    filterKnob.setBounds (fromDesign (junky::layout::filterKnob.x(), junky::layout::filterKnob.y(),
                                       junky::layout::filterKnob.size, junky::layout::filterKnob.size));
-    mixKnob.setBounds (fromDesign (junky::layout::mixKnob.x, junky::layout::mixKnob.y,
+    mixKnob.setBounds (fromDesign (junky::layout::mixKnob.x(), junky::layout::mixKnob.y(),
                                    junky::layout::mixKnob.size, junky::layout::mixKnob.size));
-    drunkKnob.setBounds (fromDesign (junky::layout::drunkKnob.x, junky::layout::drunkKnob.y,
+    drunkKnob.setBounds (fromDesign (junky::layout::drunkKnob.x(), junky::layout::drunkKnob.y(),
                                      junky::layout::drunkKnob.size, junky::layout::drunkKnob.size));
-    bassFreqKnob.setBounds (fromDesign (junky::layout::bassFreqKnob.x, junky::layout::bassFreqKnob.y,
+    bassFreqKnob.setBounds (fromDesign (junky::layout::bassFreqKnob.x(), junky::layout::bassFreqKnob.y(),
                                         junky::layout::bassFreqKnob.size, junky::layout::bassFreqKnob.size));
-    bitsKnob.setBounds (fromDesign (junky::layout::bitsKnob.x, junky::layout::bitsKnob.y,
+    bitsKnob.setBounds (fromDesign (junky::layout::bitsKnob.x(), junky::layout::bitsKnob.y(),
                                     junky::layout::bitsKnob.size, junky::layout::bitsKnob.size));
-    rateKnob.setBounds (fromDesign (junky::layout::rateKnob.x, junky::layout::rateKnob.y,
+    rateKnob.setBounds (fromDesign (junky::layout::rateKnob.x(), junky::layout::rateKnob.y(),
                                     junky::layout::rateKnob.size, junky::layout::rateKnob.size));
-    driveKnob.setBounds (fromDesign (junky::layout::driveKnob.x, junky::layout::driveKnob.y,
+    driveKnob.setBounds (fromDesign (junky::layout::driveKnob.x(), junky::layout::driveKnob.y(),
                                      junky::layout::driveKnob.size, junky::layout::driveKnob.size));
-    aliasKnob.setBounds (fromDesign (junky::layout::aliasKnob.x, junky::layout::aliasKnob.y,
+    aliasKnob.setBounds (fromDesign (junky::layout::aliasKnob.x(), junky::layout::aliasKnob.y(),
                                      junky::layout::aliasKnob.size, junky::layout::aliasKnob.size));
-    noiseKnob.setBounds (fromDesign (junky::layout::noiseKnob.x, junky::layout::noiseKnob.y,
+    noiseKnob.setBounds (fromDesign (junky::layout::noiseKnob.x(), junky::layout::noiseKnob.y(),
                                      junky::layout::noiseKnob.size, junky::layout::noiseKnob.size));
-    characterKnob.setBounds (fromDesign (junky::layout::characterKnob.x, junky::layout::characterKnob.y,
+    characterKnob.setBounds (fromDesign (junky::layout::characterKnob.x(), junky::layout::characterKnob.y(),
                                          junky::layout::characterKnob.size, junky::layout::characterKnob.size));
-    inputKnob.setBounds (fromDesign (junky::layout::inputKnob.x, junky::layout::inputKnob.y,
+    inputKnob.setBounds (fromDesign (junky::layout::inputKnob.x(), junky::layout::inputKnob.y(),
                                      junky::layout::inputKnob.size, junky::layout::inputKnob.size));
-    outputKnob.setBounds (fromDesign (junky::layout::outputKnob.x, junky::layout::outputKnob.y,
+    outputKnob.setBounds (fromDesign (junky::layout::outputKnob.x(), junky::layout::outputKnob.y(),
                                       junky::layout::outputKnob.size, junky::layout::outputKnob.size));
 }
 
