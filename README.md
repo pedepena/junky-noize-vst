@@ -1,6 +1,6 @@
 # Junky Noize
 
-Efecto de audio VST3 (y AU en macOS) con controles de entrada/salida, mezcla, filtro, realce de graves, mono/estéreo, A/B y presets. Los modelos de máquinas de sampleo están previstos para una fase posterior; todavía no forman parte del motor de audio.
+Efecto de audio VST3 (y AU en macOS) con controles de entrada/salida, mezcla, filtro, realce de graves, mono/estéreo y presets de fábrica y de usuario con nombre. Los modelos de máquinas de sampleo están previstos para una fase posterior; todavía no forman parte del motor de audio.
 
 ## Descargar e instalar
 
@@ -44,3 +44,6 @@ JunkyNoize/
     ├── dsp/
     └── ui/
 ```
+
+
+Los presets de usuario se guardan como archivos XML en la carpeta `Junky Noize/Presets` de los datos de usuario. El botón de carpeta de la interfaz abre esa ubicación; SAVE permite crear o reemplazar presets con nombre.

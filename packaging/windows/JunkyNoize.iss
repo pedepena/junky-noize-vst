@@ -8,9 +8,12 @@ AppId={{0C69A433-C568-4AEC-9A5D-6EC1B12D974A}
 AppName={#PluginName}
 AppVersion={#PluginVersion}
 AppPublisher=Junky Noize
-DefaultDirName={commoncf}\VST3\Junky Noize.vst3
-DisableDirPage=yes
+DefaultDirName={commoncf}\VST3
+DisableDirPage=no
 DisableProgramGroupPage=yes
+UsePreviousAppDir=no
+AppendDefaultDirName=no
+DirExistsWarning=no
 Uninstallable=yes
 OutputDir=Output
 OutputBaseFilename=JunkyNoize-Setup-{#PluginVersion}-Windows-x64
@@ -24,7 +27,7 @@ CloseApplications=force
 RestartApplications=no
 
 [Files]
-Source: "..\..\build\JunkyNoize_artefacts\Release\VST3\Junky Noize.vst3\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "..\..\build\JunkyNoize_artefacts\Release\VST3\Junky Noize.vst3\*"; DestDir: "{app}\Junky Noize.vst3"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [UninstallDelete]
-Type: filesandordirs; Name: "{app}"
+Type: filesandordirs; Name: "{app}\Junky Noize.vst3"

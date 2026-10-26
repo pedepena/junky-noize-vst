@@ -1,9 +1,11 @@
 #include "PluginEditor.h"
 #include "ui/Chassis.h"
+#include "Layout.h"
+#include "BinaryData.h"
 
 namespace
 {
-constexpr int initialWidth = 760;
+constexpr int initialWidth = 1064;
 constexpr int initialHeight = (int) (initialWidth * junky::theme::designHeight / junky::theme::designWidth);
 } // namespace
 
@@ -59,6 +61,7 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     noiseKnob.setDoubleClickReturnValue (true, 0.0);
     characterKnob.setDoubleClickReturnValue (true, 1.0);
 
+    // FASE 2: los botones, LCD y medidores se mantienen fuera de la interfaz hasta sus fases.
     // Bass boost: interruptor conectado al parametro
     bassButton.setClickingTogglesState (true);
     bassAttachment = std::make_unique<juce::ButtonParameterAttachment> (*audioProcessor.apvts.getParameter (bassBoost), bassButton);
@@ -72,21 +75,10 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     addAndMakeVisible (monoButton);
     addAndMakeVisible (stereoButton);
 
-    // A/B
-    abSwitch.onSelect = [this] (int)
-    {
-        audioProcessor.toggleAB();
-    };
-    abSwitch.setActiveSlotB (audioProcessor.isSlotB());
-    addAndMakeVisible (abSwitch);
-
     // Pantalla de presets
-    juce::StringArray names;
-    for (const auto& preset : junky::factoryPresets)
-        names.add (preset.name);
-
-    lcd.setItems (names);
-    lcd.setSelected (audioProcessor.getCurrentPreset());
+    audioProcessor.refreshUserPresets();
+    lcd.setItems (audioProcessor.getPresetNames());
+    lcd.setSelected (audioProcessor.getLcdSelectionIndex());
     lcd.onSelect = [this] (int index) { audioProcessor.selectPreset (index); };
     addAndMakeVisible (lcd);
 
@@ -97,18 +89,85 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     saveButton.setLabel ("SAVE");
     saveButton.onClick = [this]
     {
-        const int slot = audioProcessor.saveCustomPreset();
-        lcd.setHeader (slot >= 0 ? "SAVED TO CUSTOM " + juce::String (slot + 1) : "SELECT A CUSTOM SLOT", slot >= 0 ? 1200 : 1500);
+        juce::String initial;
+        const int selected = lcd.getSelected();
+        if (selected >= 51) initial = audioProcessor.getPresetNames()[selected];
+        auto* alert = new juce::AlertWindow ("Save preset",
+            "Name (max 18 characters: letters, numbers, space, - & ( ) )", juce::AlertWindow::NoIcon);
+        alert->addTextEditor ("name", initial);
+        alert->addButton ("Save", 1, juce::KeyPress (juce::KeyPress::returnKey));
+        alert->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+        juce::Component::SafePointer<JunkyNoizeAudioProcessorEditor> safeEditor (this);
+        juce::Component::SafePointer<juce::AlertWindow> safeAlert (alert);
+        alert->enterModalState (true, juce::ModalCallbackFunction::create ([safeEditor, safeAlert] (int result)
+        {
+            if (safeEditor == nullptr || safeAlert == nullptr || result != 1) return;
+            auto name = safeAlert->getTextEditorContents ("name");
+            name.retainCharacters ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -&()");
+            name = name.trim().substring (0, 18);
+            if (name.isEmpty()) { safeEditor->lcd.setHeader ("ENTER A NAME", 1500); return; }
+            auto save = [safeEditor, name]
+            {
+                if (safeEditor == nullptr) return;
+                if (! safeEditor->audioProcessor.saveUserPreset (name, true))
+                { safeEditor->lcd.setHeader ("SAVE FAILED", 1500); return; }
+                safeEditor->lcd.setItems (safeEditor->audioProcessor.getPresetNames());
+                safeEditor->lcd.setSelected (safeEditor->audioProcessor.getLcdSelectionIndex());
+                safeEditor->lcd.setHeader ("SAVED: " + name, 1200);
+            };
+            const auto names = safeEditor->audioProcessor.getPresetNames();
+            bool duplicate = false;
+            for (int i = 51; i < names.size(); ++i)
+                if (names[i].equalsIgnoreCase (name)) { duplicate = true; break; }
+            if (! duplicate) { save(); return; }
+            auto* replace = new juce::AlertWindow ("Replace preset", "Replace preset " + name + "?",
+                                                   juce::AlertWindow::NoIcon);
+            replace->addButton ("Replace", 1, juce::KeyPress (juce::KeyPress::returnKey));
+            replace->addButton ("Cancel", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+            replace->enterModalState (true, juce::ModalCallbackFunction::create ([save] (int replaceResult)
+            { if (replaceResult == 1) save(); }), true);
+        }), true);
     };
     addAndMakeVisible (saveButton);
 
+    folderButton.onClick = [this]
+    {
+        auto dir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+            .getChildFile ("Junky Noize").getChildFile ("Presets");
+        dir.createDirectory();
+        if (! dir.startAsProcess()) lcd.setHeader ("CANNOT OPEN FOLDER", 1500);
+    };
+    addAndMakeVisible (folderButton);
+
+    inputMeter.setComponentID ("input-meter");
+    outputMeter.setComponentID ("output-meter");
     addAndMakeVisible (inputMeter);
     addAndMakeVisible (outputMeter);
+
+    // En FASE 2 solo se muestran los 12 knobs sobre el fondo vacío.
+    bassButton.setVisible (false);
+    monoButton.setVisible (false);
+    stereoButton.setVisible (false);
+    folderButton.setVisible (false);
+    saveButton.setVisible (false);
+    presetUpButton.setVisible (false);
+    presetDownButton.setVisible (false);
+    lcd.setVisible (false);
+    inputMeter.setVisible (false);
+    outputMeter.setVisible (false);
 
     setResizable (true, true);
     setResizeLimits (initialWidth / 2, initialHeight / 2, initialWidth * 2, initialHeight * 2);
     getConstrainer()->setFixedAspectRatio ((double) junky::theme::designWidth / (double) junky::theme::designHeight);
-    setSize (initialWidth, initialHeight);
+    const auto saved = audioProcessor.getEditorSize();
+    const int minWidth = initialWidth / 2, maxWidth = initialWidth * 2;
+    const int minHeight = initialHeight / 2, maxHeight = initialHeight * 2;
+    const int width = saved.x > 0 ? juce::jlimit (minWidth, maxWidth, saved.x)
+                                  : saved.y > 0 ? juce::roundToInt ((float) saved.y * junky::theme::designWidth / junky::theme::designHeight)
+                                                : initialWidth;
+    const int height = saved.y > 0 ? juce::jlimit (minHeight, maxHeight, saved.y)
+                                   : juce::roundToInt ((float) width * junky::theme::designHeight / junky::theme::designWidth);
+    setSize (width, height);
 
     startTimerHz (30);
 }
@@ -127,6 +186,7 @@ void JunkyNoizeAudioProcessorEditor::setupKnob (juce::Slider& knob)
     knob.setRotaryParameters (juce::MathConstants<float>::pi * 1.25f, juce::MathConstants<float>::pi * 2.75f, true);
     knob.setPopupDisplayEnabled (true, true, this);
     knob.setLookAndFeel (&knobLook);
+    knob.getProperties().set ("wearSeed", nextKnobWearSeed++);
     addAndMakeVisible (knob);
 }
 
@@ -140,15 +200,8 @@ juce::Rectangle<int> JunkyNoizeAudioProcessorEditor::fromDesign (float x, float 
 
 void JunkyNoizeAudioProcessorEditor::rebuildBackground()
 {
-    // Se dibuja al doble de tamano para que se vea nitido en pantallas de alta resolucion
-    const int w = juce::jmax (1, getWidth() * 2);
-    const int h = juce::jmax (1, getHeight() * 2);
-
-    background = juce::Image (juce::Image::ARGB, w, h, true);
-    juce::Graphics g (background);
-    g.addTransform (juce::AffineTransform::scale ((float) w / junky::theme::designWidth,
-                                                  (float) h / junky::theme::designHeight));
-    junky::paintChassis (g);
+    background = juce::ImageCache::getFromMemory (BinaryData::background_empty_png,
+                                                  BinaryData::background_empty_pngSize);
 }
 
 void JunkyNoizeAudioProcessorEditor::paint (juce::Graphics& g)
@@ -156,41 +209,40 @@ void JunkyNoizeAudioProcessorEditor::paint (juce::Graphics& g)
     if (background.isValid())
         g.drawImage (background, getLocalBounds().toFloat());
 
-    g.addTransform (juce::AffineTransform::scale ((float) getWidth() / junky::theme::designWidth,
-                                                  (float) getHeight() / junky::theme::designHeight));
-    junky::paintLabels (g, audioProcessor.isSlotB());
+
 }
 
 void JunkyNoizeAudioProcessorEditor::resized()
 {
+    if (getWidth() >= initialWidth / 2 && getHeight() >= initialHeight / 2)
+        audioProcessor.setEditorSize (getWidth(), getHeight());
+
     rebuildBackground();
 
-    lcd.setBounds (fromDesign (340, 55, 420, 215));
-    presetUpButton.setBounds (fromDesign (787, 70, 78, 85));
-    presetDownButton.setBounds (fromDesign (787, 165, 78, 85));
-    saveButton.setBounds (fromDesign (787, 258, 78, 34));
-
-    filterKnob.setBounds (fromDesign (192, 443, 170, 170));
-    mixKnob.setBounds (fromDesign (390, 327, 300, 300));
-
-    drunkKnob.setBounds (fromDesign (723, 443, 170, 170));
-    abSwitch.setBounds (fromDesign (918, 264, 144, 50));
-
-    monoButton.setBounds (fromDesign (90, 780, 110, 100));
-    stereoButton.setBounds (fromDesign (250, 780, 110, 100));
-
-    bassButton.setBounds (fromDesign (465, 778, 90, 95));
-    bassFreqKnob.setBounds (fromDesign (590, 750, 180, 180));
-
-    inputMeter.setBounds (fromDesign (843, 728, 90, 268));
-    outputMeter.setBounds (fromDesign (947, 728, 90, 268));
-    inputKnob.setBounds (fromDesign (825, 1002, 96, 96));
-    outputKnob.setBounds (fromDesign (932, 1002, 96, 96));
-
-    juce::Slider* colourKnobs[] = { &driveKnob, &bitsKnob, &rateKnob, &aliasKnob, &noiseKnob, &characterKnob };
-    constexpr float centres[] = { 118, 236, 354, 472, 590, 708 };
-    for (int i = 0; i < 6; ++i)
-        colourKnobs[i]->setBounds (fromDesign (centres[i] - 44.0f, 1008, 88, 88));
+    filterKnob.setBounds (fromDesign (junky::layout::filterKnob.x, junky::layout::filterKnob.y,
+                                      junky::layout::filterKnob.size, junky::layout::filterKnob.size));
+    mixKnob.setBounds (fromDesign (junky::layout::mixKnob.x, junky::layout::mixKnob.y,
+                                   junky::layout::mixKnob.size, junky::layout::mixKnob.size));
+    drunkKnob.setBounds (fromDesign (junky::layout::drunkKnob.x, junky::layout::drunkKnob.y,
+                                     junky::layout::drunkKnob.size, junky::layout::drunkKnob.size));
+    bassFreqKnob.setBounds (fromDesign (junky::layout::bassFreqKnob.x, junky::layout::bassFreqKnob.y,
+                                        junky::layout::bassFreqKnob.size, junky::layout::bassFreqKnob.size));
+    bitsKnob.setBounds (fromDesign (junky::layout::bitsKnob.x, junky::layout::bitsKnob.y,
+                                    junky::layout::bitsKnob.size, junky::layout::bitsKnob.size));
+    rateKnob.setBounds (fromDesign (junky::layout::rateKnob.x, junky::layout::rateKnob.y,
+                                    junky::layout::rateKnob.size, junky::layout::rateKnob.size));
+    driveKnob.setBounds (fromDesign (junky::layout::driveKnob.x, junky::layout::driveKnob.y,
+                                     junky::layout::driveKnob.size, junky::layout::driveKnob.size));
+    aliasKnob.setBounds (fromDesign (junky::layout::aliasKnob.x, junky::layout::aliasKnob.y,
+                                     junky::layout::aliasKnob.size, junky::layout::aliasKnob.size));
+    noiseKnob.setBounds (fromDesign (junky::layout::noiseKnob.x, junky::layout::noiseKnob.y,
+                                     junky::layout::noiseKnob.size, junky::layout::noiseKnob.size));
+    characterKnob.setBounds (fromDesign (junky::layout::characterKnob.x, junky::layout::characterKnob.y,
+                                         junky::layout::characterKnob.size, junky::layout::characterKnob.size));
+    inputKnob.setBounds (fromDesign (junky::layout::inputKnob.x, junky::layout::inputKnob.y,
+                                     junky::layout::inputKnob.size, junky::layout::inputKnob.size));
+    outputKnob.setBounds (fromDesign (junky::layout::outputKnob.x, junky::layout::outputKnob.y,
+                                      junky::layout::outputKnob.size, junky::layout::outputKnob.size));
 }
 
 void JunkyNoizeAudioProcessorEditor::timerCallback()
@@ -208,14 +260,16 @@ void JunkyNoizeAudioProcessorEditor::timerCallback()
     monoButton.setToggleState (isMono, juce::dontSendNotification);
     stereoButton.setToggleState (! isMono, juce::dontSendNotification);
 
-    // Preset elegido (por ejemplo, al cargar un proyecto)
-    lcd.setSelected (audioProcessor.getCurrentPreset());
-
-    // Pilotos A/B
-    if (displayedSlotB != audioProcessor.isSlotB())
+    // Actualiza presets nuevos o borrados sin bloquear el audio.
+    if (++presetRefreshTicks >= 60)
     {
-        displayedSlotB = audioProcessor.isSlotB();
-        abSwitch.setActiveSlotB (displayedSlotB);
-        repaint();
+        presetRefreshTicks = 0;
+        if (audioProcessor.refreshUserPresets())
+        {
+            lcd.setItems (audioProcessor.getPresetNames());
+            lcd.setSelected (audioProcessor.getLcdSelectionIndex());
+        }
     }
+    lcd.setSelected (audioProcessor.getLcdSelectionIndex());
+
 }

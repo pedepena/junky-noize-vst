@@ -5,7 +5,6 @@
 
 #include "PluginProcessor.h"
 #include "ui/KnobLookAndFeel.h"
-#include "ui/ABSwitch.h"
 #include "ui/LcdDisplay.h"
 #include "ui/LevelMeter.h"
 #include "ui/PanelButton.h"
@@ -27,26 +26,27 @@ private:
     juce::Rectangle<int> fromDesign (float x, float y, float w, float h) const;
 
     JunkyNoizeAudioProcessor& audioProcessor;
+    int nextKnobWearSeed = 100;
 
     junky::KnobLookAndFeel knobLook;
 
     juce::Slider filterKnob, mixKnob, bassFreqKnob, inputKnob, outputKnob, drunkKnob;
     juce::Slider driveKnob, bitsKnob, rateKnob, aliasKnob, noiseKnob, characterKnob;
 
-    junky::PanelButton saveButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, false };
-    junky::PanelButton bassButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
-    junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
-    junky::PanelButton stereoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true };
-    junky::PanelButton presetUpButton { junky::PanelButton::Style::arrowUp };
-    junky::PanelButton presetDownButton { junky::PanelButton::Style::arrowDown };
-    junky::ABSwitch abSwitch;
+    junky::PanelButton folderButton { junky::PanelButton::Style::folder, junky::theme::ledRed, junky::theme::ledGreen, false, 1007 };
+    junky::PanelButton saveButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, false, 2011 };
+    junky::PanelButton bassButton { junky::PanelButton::Style::agedKey, junky::theme::ledRed, junky::theme::ledGreen, true, 3019 };
+    junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true, 4021 };
+    junky::PanelButton stereoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true, 5023 };
+    junky::PanelButton presetUpButton { junky::PanelButton::Style::arrowUp, junky::theme::ledRed, junky::theme::ledGreen, false, 6037 };
+    junky::PanelButton presetDownButton { junky::PanelButton::Style::arrowDown, junky::theme::ledRed, junky::theme::ledGreen, false, 6043 };
 
     junky::LcdDisplay lcd;
     junky::LevelMeter inputMeter, outputMeter;
 
     float inputDisplayDb = -100.0f;
     float outputDisplayDb = -100.0f;
-    bool displayedSlotB = false;
+    int presetRefreshTicks = 0;
 
     juce::Image background;
 

@@ -1,0 +1,15 @@
+JUNKY NOIZE - FASE 2 (preparada para prueba)
+
+Qué incluye:
+- Fondo vacío exacto aportado por el usuario (1618 x 972 px).
+- Tres recortes de mandos extraídos de la imagen completa aportada: pequeño, mediano y grande.
+- Los 12 knobs se dibujan encima del fondo y siguen conectados a los parámetros ya existentes.
+- En esta fase se ocultan LCD, botones e indicadores para no adelantar fases posteriores.
+- Se mantiene el tamaño proporcional de la ventana.
+
+IMPORTANTE:
+- No se ha podido compilar en este entorno porque CMake necesita descargar JUCE 8.0.8 de GitHub y la conexión de red está bloqueada.
+- Los mandos se han recortado de la imagen completa. Al no disponer de sprites originales transparentes, pueden requerir retoques visuales.
+- No se ha modificado el DSP ni la definición de parámetros de audio.
+
+Para probarlo en Windows, abre el proyecto con CMake como de costumbre y compílalo cuando JUCE esté disponible localmente.

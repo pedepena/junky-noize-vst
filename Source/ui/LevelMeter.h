@@ -3,6 +3,7 @@
 #include <cmath>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "Theme.h"
+#include "WearTexture.h"
 
 namespace junky
 {
@@ -46,12 +47,20 @@ public:
             if (i % 2 == 0)
             {
                 const juce::String text = juce::String ((int) threshold);
-                const juce::Rectangle<float> label (bar.getRight() + 5.0f,
+                const juce::Rectangle<float> segmentBounds (bar.getX(),
                     bar.getBottom() - 3.0f - (float) (i + 1) * segmentHeight,
-                    bounds.getRight() - bar.getRight() - 5.0f, segmentHeight);
-                g.setColour (theme::ink);
-                theme::drawBitmapText (g, text, label, 9.0f);
+                    bounds.getWidth(), segmentHeight);
+                const float labelLeft = bar.getRight() + bounds.getWidth() * 0.06f;
+                theme::drawPanelText (g, text, labelLeft + 200.0f, segmentBounds.getCentreY(),
+                                      segmentHeight * 1.03f, juce::Justification::centredLeft);
             }
+        }
+
+        // Rasguños suaves sobre el cristal, limitados a la barra para no apagar los LEDs.
+        {
+            juce::Graphics::ScopedSaveState wearState (g);
+            g.reduceClipRegion (bar.toNearestInt());
+            wear::draw (g, bar, wear::Surface::meter, getComponentID().hashCode());
         }
     }
 

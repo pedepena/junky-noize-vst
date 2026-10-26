@@ -44,12 +44,17 @@ public:
 
     // ---- Funciones para la interfaz ----------------------------------------
     int getCurrentPreset() const { return currentPreset.load(); }
+    int getLcdSelectionIndex() const;
+    juce::StringArray getPresetNames() const;
+    bool refreshUserPresets();
     void selectPreset (int index);
-    int saveCustomPreset();
-
-    /** Cambia entre los ajustes A y B (para comparar dos sonidos). */
-    void toggleAB();
-    bool isSlotB() const { return activeSlot.load() == 1; }
+    bool saveUserPreset (const juce::String& name, bool replaceExisting);
+    juce::Point<int> getEditorSize() const { return { editorWidth.load(), editorHeight.load() }; }
+    void setEditorSize (int width, int height)
+    {
+        editorWidth.store (width);
+        editorHeight.store (height);
+    }
 
     /** Cambia un parametro avisando al DAW (para que se pueda automatizar). */
     void setParameterPlain (const juce::String& parameterId, float plainValue);
@@ -94,9 +99,12 @@ private:
     float lastRateValue = -1.0f, lastAliasValue = -1.0f;
 
     std::atomic<int> currentPreset { 0 };
+    mutable juce::CriticalSection userPresetLock;
+    juce::StringArray userPresetNames;
+    juce::String selectedUserPreset;
     std::atomic<int> currentMachine { -1 };
-    std::atomic<int> activeSlot { 0 };
-    juce::ValueTree slotState[2];
+    std::atomic<int> editorWidth { 0 };
+    std::atomic<int> editorHeight { 0 };
     void updateMachineFilters (float character);
     int lastMachine = -2;
     float lastCharacter = -1.0f;
