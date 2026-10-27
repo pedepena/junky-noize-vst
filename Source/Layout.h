@@ -16,9 +16,9 @@ struct KnobBounds
     constexpr float y() const { return centreY - size * 0.5f; }
 };
 
-inline constexpr float largeKnobSize = 214.0f;
-inline constexpr float mediumKnobSize = 124.0f;
-inline constexpr float smallKnobSize = 92.0f;
+inline constexpr float largeKnobSize = 190.0f;
+inline constexpr float mediumKnobSize = 100.0f;
+inline constexpr float smallKnobSize = 76.0f;
 
 inline constexpr KnobBounds filterKnob { 499.0f, 371.0f, mediumKnobSize };
 inline constexpr KnobBounds mixKnob { 808.0f, 398.0f, largeKnobSize };
