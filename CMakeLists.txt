@@ -19,6 +19,10 @@ juce_add_binary_data(JunkyNoizeAssets SOURCES
     Source/ui/assets/knob_small.png
     Source/ui/assets/knob_medium.png
     Source/ui/assets/knob_large.png
+    Source/ui/assets/btn_bass.png
+    Source/ui/assets/led_on.png
+    Source/ui/assets/led_off.png
+    Source/ui/assets/switch_lever.png
     Source/ui/assets/JunkyNoizeReference.jpg)
 
 # Formatos de plugin: VST3 en todos los sistemas, AU solo en Mac,

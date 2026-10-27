@@ -65,19 +65,26 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     noiseKnob.setDoubleClickReturnValue (true, 0.0);
     characterKnob.setDoubleClickReturnValue (true, 1.0);
 
-    // FASE 2: los botones, LCD y medidores se mantienen fuera de la interfaz hasta sus fases.
-    // Bass boost: interruptor conectado al parametro
+    // Los controles de las fases posteriores permanecen ocultos.
+    // BASS BOOST usa su parametro existente y empieza apagado.
     bassButton.setClickingTogglesState (true);
     bassAttachment = std::make_unique<juce::ButtonParameterAttachment> (*audioProcessor.apvts.getParameter (bassBoost), bassButton);
+    const bool bassBoostOn = audioProcessor.apvts.getRawParameterValue (junky::params::bassBoost)->load() > 0.5f;
+    const bool isMono = audioProcessor.apvts.getRawParameterValue (junky::params::mono)->load() > 0.5f;
+    bassLed.setOn (bassBoostOn);
+    monoLed.setOn (isMono);
+    stereoLed.setOn (! isMono);
+    monoStereoLever.setMono (isMono);
     addAndMakeVisible (bassButton);
+    addAndMakeVisible (bassLed);
 
-    // Mono / Stereo: dos botones que se excluyen entre si
-    monoButton.onClick = [this] { audioProcessor.setParameterPlain (junky::params::mono, 1.0f); };
-    stereoButton.onClick = [this] { audioProcessor.setParameterPlain (junky::params::mono, 0.0f); };
-    monoButton.setToggleState (false, juce::dontSendNotification);
-    stereoButton.setToggleState (true, juce::dontSendNotification);
-    addAndMakeVisible (monoButton);
-    addAndMakeVisible (stereoButton);
+    monoStereoLever.onToggle = [this] (bool isMono)
+    {
+        audioProcessor.setParameterPlain (junky::params::mono, isMono ? 1.0f : 0.0f);
+    };
+    addAndMakeVisible (monoStereoLever);
+    addAndMakeVisible (monoLed);
+    addAndMakeVisible (stereoLed);
 
     // Pantalla de presets
     audioProcessor.refreshUserPresets();
@@ -149,9 +156,7 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     addAndMakeVisible (outputMeter);
 
     // En FASE 2 solo se muestran los 12 knobs sobre el fondo vacío.
-    bassButton.setVisible (false);
-    monoButton.setVisible (false);
-    stereoButton.setVisible (false);
+
     folderButton.setVisible (false);
     saveButton.setVisible (false);
     presetUpButton.setVisible (false);
@@ -245,6 +250,19 @@ void JunkyNoizeAudioProcessorEditor::resized()
                                      junky::layout::inputKnob.size, junky::layout::inputKnob.size));
     outputKnob.setBounds (fromDesign (junky::layout::outputKnob.x(), junky::layout::outputKnob.y(),
                                       junky::layout::outputKnob.size, junky::layout::outputKnob.size));
+
+    bassButton.setBounds (fromDesign (junky::layout::bassButton.x(), junky::layout::bassButton.y(),
+                                      junky::layout::bassButton.width, junky::layout::bassButton.height));
+    bassLed.setBounds (fromDesign (junky::layout::bassLed.x(), junky::layout::bassLed.y(),
+                                   junky::layout::bassLed.width, junky::layout::bassLed.height));
+    monoLed.setBounds (fromDesign (junky::layout::monoLed.x(), junky::layout::monoLed.y(),
+                                   junky::layout::monoLed.width, junky::layout::monoLed.height));
+    stereoLed.setBounds (fromDesign (junky::layout::stereoLed.x(), junky::layout::stereoLed.y(),
+                                     junky::layout::stereoLed.width, junky::layout::stereoLed.height));
+    monoStereoLever.setBounds (fromDesign (junky::layout::switchTrackStartX,
+                                           junky::layout::switchTrackCentreY - junky::layout::switchTrackHitHeight * 0.5f,
+                                           junky::layout::switchTrackEndX - junky::layout::switchTrackStartX,
+                                           junky::layout::switchTrackHitHeight));
 }
 
 void JunkyNoizeAudioProcessorEditor::timerCallback()
@@ -257,10 +275,12 @@ void JunkyNoizeAudioProcessorEditor::timerCallback()
     inputMeter.setLevelDb (inputDisplayDb);
     outputMeter.setLevelDb (outputDisplayDb);
 
-    // Botones Mono / Stereo
+    const bool bassBoostOn = audioProcessor.apvts.getRawParameterValue (junky::params::bassBoost)->load() > 0.5f;
     const bool isMono = audioProcessor.apvts.getRawParameterValue (junky::params::mono)->load() > 0.5f;
-    monoButton.setToggleState (isMono, juce::dontSendNotification);
-    stereoButton.setToggleState (! isMono, juce::dontSendNotification);
+    bassLed.setOn (bassBoostOn);
+    monoLed.setOn (isMono);
+    stereoLed.setOn (! isMono);
+    monoStereoLever.setMono (isMono);
 
     // Actualiza presets nuevos o borrados sin bloquear el audio.
     if (++presetRefreshTicks >= 60)

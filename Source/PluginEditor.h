@@ -8,6 +8,7 @@
 #include "ui/LcdDisplay.h"
 #include "ui/LevelMeter.h"
 #include "ui/PanelButton.h"
+#include "ui/Phase3Controls.h"
 
 class JunkyNoizeAudioProcessorEditor : public juce::AudioProcessorEditor,
                                        private juce::Timer
@@ -35,9 +36,9 @@ private:
 
     junky::PanelButton folderButton { junky::PanelButton::Style::folder, junky::theme::ledRed, junky::theme::ledGreen, false, 1007 };
     junky::PanelButton saveButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, false, 2011 };
-    junky::PanelButton bassButton { junky::PanelButton::Style::agedKey, junky::theme::ledRed, junky::theme::ledGreen, true, 3019 };
-    junky::PanelButton monoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true, 4021 };
-    junky::PanelButton stereoButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, true, 5023 };
+    junky::ImageToggleButton bassButton;
+    junky::ImageLed bassLed, monoLed, stereoLed;
+    junky::MonoStereoLever monoStereoLever;
     junky::PanelButton presetUpButton { junky::PanelButton::Style::arrowUp, junky::theme::ledRed, junky::theme::ledGreen, false, 6037 };
     junky::PanelButton presetDownButton { junky::PanelButton::Style::arrowDown, junky::theme::ledRed, junky::theme::ledGreen, false, 6043 };
 

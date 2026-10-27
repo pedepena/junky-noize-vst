@@ -20,6 +20,32 @@ inline constexpr float largeKnobSize = 190.0f;
 inline constexpr float mediumKnobSize = 100.0f;
 inline constexpr float smallKnobSize = 76.0f;
 
+struct ElementBounds
+{
+    float centreX;
+    float centreY;
+    float width;
+    float height;
+
+    constexpr float x() const { return centreX - width * 0.5f; }
+    constexpr float y() const { return centreY - height * 0.5f; }
+};
+
+inline constexpr ElementBounds bassButton { 146.0f, 661.0f, 62.0f, 62.0f };
+inline constexpr ElementBounds bassLed { 96.0f, 611.0f, 22.0f, 22.0f };
+inline constexpr ElementBounds monoLed { 139.0f, 783.0f, 22.0f, 22.0f };
+inline constexpr ElementBounds stereoLed { 302.0f, 783.0f, 22.0f, 22.0f };
+inline constexpr float switchTrackStartX = 173.0f;
+inline constexpr float switchTrackEndX = 270.0f;
+inline constexpr float switchTrackCentreY = 779.0f;
+inline constexpr float switchTrackHitHeight = 44.0f;
+inline constexpr float switchLeverMonoCentreX = 195.0f;
+inline constexpr float switchLeverStereoCentreX = 248.0f;
+inline constexpr float switchLeverWidth = 40.0f;
+inline constexpr float switchLeverHeight = 35.0f;
+inline constexpr float bassButtonPressInset = 2.0f;
+inline constexpr int switchAnimationDurationMs = 120;
+
 inline constexpr KnobBounds filterKnob { 499.0f, 371.0f, mediumKnobSize };
 inline constexpr KnobBounds mixKnob { 808.0f, 398.0f, largeKnobSize };
 inline constexpr KnobBounds drunkKnob { 1117.0f, 371.0f, mediumKnobSize };
