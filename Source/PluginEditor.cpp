@@ -1,5 +1,6 @@
 #include "PluginEditor.h"
 #include "ui/Chassis.h"
+#include "ui/Theme.h"
 #include "Layout.h"
 #include "BinaryData.h"
 
