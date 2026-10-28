@@ -1,15 +1,31 @@
 #include "LcdDisplay.h"
 #include "Theme.h"
-#include "WearTexture.h"
+#include "../Layout.h"
 
 namespace junky
 {
+namespace
+{
+const juce::Colour lcdText (0xff8fe07a);
+const juce::Colour lcdSelection (0xff8fe07a);
+const juce::Colour lcdSelectedText (0xff10200c);
+}
+
 void LcdDisplay::setHeader (const juce::String& text, int durationMs)
 {
-    header = text; repaint();
-    if (durationMs > 0) startTimer (durationMs); else stopTimer();
+    header = text;
+    repaint();
+    if (durationMs > 0) startTimer (durationMs);
+    else stopTimer();
 }
-void LcdDisplay::timerCallback() { stopTimer(); header = "PRESET SELECT"; repaint(); }
+
+void LcdDisplay::timerCallback()
+{
+    stopTimer();
+    header.clear();
+    repaint();
+}
+
 void LcdDisplay::setItems (const juce::StringArray& newItems)
 {
     items = newItems;
@@ -21,7 +37,6 @@ void LcdDisplay::setItems (const juce::StringArray& newItems)
 void LcdDisplay::setSelected (int index)
 {
     index = juce::jlimit (0, juce::jmax (0, items.size() - 1), index);
-
     if (index != selected)
     {
         selected = index;
@@ -32,11 +47,8 @@ void LcdDisplay::setSelected (int index)
 
 void LcdDisplay::ensureVisible()
 {
-    if (selected < offset)
-        offset = selected;
-    else if (selected >= offset + visibleRows)
-        offset = selected - visibleRows + 1;
-
+    if (selected < offset) offset = selected;
+    else if (selected >= offset + visibleRows) offset = selected - visibleRows + 1;
     offset = juce::jlimit (0, juce::jmax (0, items.size() - visibleRows), offset);
 }
 
@@ -44,110 +56,106 @@ void LcdDisplay::choose (int index)
 {
     index = juce::jlimit (0, juce::jmax (0, items.size() - 1), index);
     setSelected (index);
+    if (onSelect != nullptr && ! items.isEmpty()) onSelect (index);
+}
 
-    if (onSelect != nullptr)
-        onSelect (index);
+void LcdDisplay::selectRelative (int delta)
+{
+    if (items.isEmpty()) return;
+    const int count = items.size();
+    const int next = (selected + (delta % count) + count) % count;
+    choose (next);
 }
 
 void LcdDisplay::paint (juce::Graphics& g)
 {
-    auto bounds = getLocalBounds().toFloat();
+    const auto bounds = getLocalBounds().toFloat();
+    const float scale = bounds.getWidth() / layout::presetLcdWidth;
+    const float margin = layout::presetLcdMargin * scale;
+    const float headerHeight = layout::presetLcdHeaderHeight * scale;
+    const float rowHeight = (bounds.getHeight() - margin * 2.0f - headerHeight) / (float) visibleRows;
+    const float right = bounds.getRight() - margin;
+    const float trackX = right - layout::presetLcdScrollWidth * scale;
+    const juce::Rectangle<float> screen = bounds;
 
-    juce::ColourGradient background (theme::lcdBackground.brighter (0.12f), bounds.getCentreX(), bounds.getY(),
-                                     theme::lcdBackground.darker (0.15f), bounds.getCentreX(), bounds.getBottom(), false);
-    g.setGradientFill (background);
-    g.fillRect (bounds);
+    juce::ColourGradient glass (juce::Colour (0xff375d34), bounds.getCentreX(), bounds.getY(),
+                                juce::Colour (0xff20391e), bounds.getCentreX(), bounds.getBottom(), false);
+    g.setGradientFill (glass);
+    g.fillRect (screen);
 
-    g.setColour (theme::lcdText.withAlpha (0.8f));
-    g.drawRect (bounds, 2.0f);
+    // Rayas de escaneo casi imperceptibles, recortadas al cristal.
+    g.setColour (juce::Colour (0xffc2f1a5).withAlpha (0.025f));
+    for (float y = layout::presetLcdScanlineStart * scale; y < bounds.getHeight();
+         y += layout::presetLcdScanlinePitch * scale)
+        g.fillRect (bounds.getX(), y, bounds.getWidth(), layout::presetLcdScanlineHeight * scale);
 
-    const float headerHeight = bounds.getHeight() / 9.0f;
-    const float rowHeight = (bounds.getHeight() - headerHeight) / (float) visibleRows;
-    const float fontSize = rowHeight * 0.72f;
-    const float padding = bounds.getWidth() * 0.025f;
+    const auto headerArea = juce::Rectangle<float> (margin, margin,
+        trackX - layout::presetLcdScrollGap * scale, headerHeight);
+    if (header.isNotEmpty())
+    {
+        g.setColour (lcdText.withAlpha (0.26f));
+        theme::drawBitmapText (g, header, headerArea.translated (0.0f, layout::presetLcdGlowOffset * scale), headerHeight * 0.72f);
+        g.setColour (lcdText);
+        theme::drawBitmapText (g, header, headerArea, headerHeight * 0.72f);
+    }
 
-    // Fantasma muy tenue de una impresión antigua, por debajo del texto actual.
-    g.setColour (theme::lcdText.withAlpha (0.07f));
-    theme::drawBitmapText (g, "OLD PRESET",
-                           juce::Rectangle<float> (padding * 2.0f, 0.0f,
-                                                   bounds.getWidth() - padding * 4.0f, headerHeight),
-                           fontSize * 0.66f);
-
-    // Matriz de pixeles fija: la fuente no depende del sistema operativo.
-    g.setColour (theme::lcdText);
-    theme::drawBitmapText (g, header,
-                           juce::Rectangle<float> (padding * 2.0f, 0.0f,
-                                                   bounds.getWidth() - padding * 4.0f, headerHeight), fontSize);
-    g.fillRect (padding, headerHeight - 2.0f, bounds.getWidth() - padding * 2.0f, 2.0f);
-
-    const float scrollWidth = bounds.getWidth() * 0.05f;
-    const juce::Rectangle<float> track (bounds.getRight() - scrollWidth - padding, headerHeight + 4.0f,
-                                        scrollWidth, bounds.getHeight() - headerHeight - 8.0f);
-    g.setColour (theme::lcdText.withAlpha (0.25f));
+    const float listY = margin + headerHeight;
+    const juce::Rectangle<float> track (trackX, listY, layout::presetLcdScrollWidth * scale, rowHeight * (float) visibleRows);
+    g.setColour (lcdText.withAlpha (0.13f));
     g.fillRect (track);
-    g.setColour (theme::lcdText.withAlpha (0.85f));
 
-    const float total = (float) juce::jmax (items.size(), visibleRows);
-    const float thumbHeight = track.getHeight() * (float) visibleRows / total;
-    const float thumbY = track.getY() + track.getHeight() * (float) offset / total;
-    g.fillRect (track.getX(), thumbY, track.getWidth(), thumbHeight);
+    const int totalItems = items.size();
+    if (totalItems > 0)
+    {
+        const float thumbHeight = track.getHeight() * (float) visibleRows / (float) juce::jmax (totalItems, visibleRows);
+        const int maxOffset = juce::jmax (1, totalItems - visibleRows);
+        const float thumbY = track.getY() + (track.getHeight() - thumbHeight) * (float) offset / (float) maxOffset;
+        g.setColour (lcdText.withAlpha (0.8f));
+        g.fillRoundedRectangle (track.getX(), thumbY, track.getWidth(), thumbHeight, track.getWidth() * 0.5f);
+    }
 
     for (int row = 0; row < visibleRows; ++row)
     {
         const int index = offset + row;
-        if (index >= items.size())
-            break;
+        if (index >= items.size()) break;
 
-        const juce::Rectangle<float> rowBounds (padding, headerHeight + 2.0f + (float) row * rowHeight,
-                                                track.getX() - padding * 2.0f, rowHeight);
+        const juce::Rectangle<float> rowBounds (margin, listY + (float) row * rowHeight,
+                                                  trackX - margin - layout::presetLcdScrollGap * scale, rowHeight);
         const bool isSelected = index == selected;
-
         if (isSelected)
         {
-            g.setColour (theme::lcdText);
-            g.fillRect (rowBounds.withTrimmedLeft (rowHeight * 0.9f));
-
-            juce::Path marker;
-            const float markerSize = rowHeight * 0.28f;
-            marker.addTriangle (rowBounds.getX() + markerSize * 0.5f, rowBounds.getCentreY() - markerSize,
-                                rowBounds.getX() + markerSize * 0.5f, rowBounds.getCentreY() + markerSize,
-                                rowBounds.getX() + markerSize * 2.2f, rowBounds.getCentreY());
-            g.fillPath (marker);
+            g.setColour (lcdSelection);
+            g.fillRoundedRectangle (rowBounds, layout::presetLcdSelectionCorner * scale);
         }
 
-        g.setColour (isSelected ? theme::lcdBackground : theme::lcdText);
-        theme::drawBitmapText (g, juce::String (index).paddedLeft ('0', 2) + "  " + items[index],
-                               rowBounds.withTrimmedLeft (rowHeight * 1.0f), fontSize);
-    }
-
-    // Cristal con polvo, rayas finas y esquinas oscurecidas; el texto sigue nítido.
-    {
-        juce::Graphics::ScopedSaveState wearState (g);
-        g.reduceClipRegion (getLocalBounds());
-        wear::draw (g, bounds, wear::Surface::lcd, 7139);
+        const auto label = juce::String (index + 1) + " " + items[index];
+        const auto textArea = rowBounds.reduced (layout::presetLcdTextInset * scale, 0.0f);
+        if (! isSelected)
+        {
+            g.setColour (lcdText.withAlpha (0.18f));
+            theme::drawBitmapText (g, label, textArea.translated (0.0f, layout::presetLcdGlowOffset * scale), rowHeight * 0.76f);
+        }
+        g.setColour (isSelected ? lcdSelectedText : lcdText);
+        theme::drawBitmapText (g, label, textArea, rowHeight * 0.76f);
     }
 }
 
 void LcdDisplay::mouseDown (const juce::MouseEvent& e)
 {
-    const float headerHeight = (float) getHeight() / 9.0f;
-    const float rowHeight = ((float) getHeight() - headerHeight) / (float) visibleRows;
-
-    if ((float) e.y < headerHeight)
-        return;
-
-    const int row = (int) (((float) e.y - headerHeight) / rowHeight);
+    const float scale = (float) getWidth() / layout::presetLcdWidth;
+    const float margin = layout::presetLcdMargin * scale;
+    const float headerHeight = layout::presetLcdHeaderHeight * scale;
+    const float rowHeight = ((float) getHeight() - margin * 2.0f - headerHeight) / (float) visibleRows;
+    const float listY = margin + headerHeight;
+    if ((float) e.y < listY || rowHeight <= 0.0f) return;
+    const int row = (int) (((float) e.y - listY) / rowHeight);
     const int index = offset + row;
-
-    if (index >= 0 && index < items.size())
-        choose (index);
+    if (row >= 0 && row < visibleRows && index >= 0 && index < items.size()) choose (index);
 }
 
 void LcdDisplay::mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails& wheel)
 {
-    if (wheel.deltaY > 0.0f)
-        choose (selected - 1);
-    else if (wheel.deltaY < 0.0f)
-        choose (selected + 1);
+    if (wheel.deltaY > 0.0f) selectRelative (-1);
+    else if (wheel.deltaY < 0.0f) selectRelative (1);
 }
 } // namespace junky

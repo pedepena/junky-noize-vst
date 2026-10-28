@@ -20,6 +20,10 @@ juce_add_binary_data(JunkyNoizeAssets SOURCES
     Source/ui/assets/knob_medium.png
     Source/ui/assets/knob_large.png
     Source/ui/assets/btn_bass.png
+    Source/ui/assets/btn_up.png
+    Source/ui/assets/btn_down.png
+    Source/ui/assets/btn_folder.png
+    Source/ui/assets/btn_save.png
     Source/ui/assets/led_on.png
     Source/ui/assets/led_off.png
     Source/ui/assets/switch_lever.png

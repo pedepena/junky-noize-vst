@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "../Layout.h"
 
 namespace junky
 {
@@ -13,6 +14,7 @@ public:
 
     void setItems (const juce::StringArray& newItems);
     void setSelected (int index);
+    void selectRelative (int delta);
     int getSelected() const { return selected; }
     void setHeader (const juce::String& text, int durationMs = 0);
 
@@ -21,7 +23,7 @@ public:
     void mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel) override;
 
 private:
-    static constexpr int visibleRows = 8;
+    static constexpr int visibleRows = layout::presetLcdVisibleRows;
 
     void ensureVisible();
     void choose (int index);
@@ -29,7 +31,7 @@ private:
     juce::StringArray items;
     int selected = 0;
     int offset = 0;
-    juce::String header { "PRESET SELECT" };
+    juce::String header;
     void timerCallback() override;
 };
 } // namespace junky

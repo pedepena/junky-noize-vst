@@ -93,11 +93,14 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     lcd.onSelect = [this] (int index) { audioProcessor.selectPreset (index); };
     addAndMakeVisible (lcd);
 
-    presetUpButton.onClick = [this] { lcd.setSelected (lcd.getSelected() - 1); audioProcessor.selectPreset (lcd.getSelected()); };
-    presetDownButton.onClick = [this] { lcd.setSelected (lcd.getSelected() + 1); audioProcessor.selectPreset (lcd.getSelected()); };
+    presetUpButton.setImageData (BinaryData::btn_up_png, BinaryData::btn_up_pngSize);
+    presetDownButton.setImageData (BinaryData::btn_down_png, BinaryData::btn_down_pngSize);
+    saveButton.setImageData (BinaryData::btn_save_png, BinaryData::btn_save_pngSize);
+    folderButton.setImageData (BinaryData::btn_folder_png, BinaryData::btn_folder_pngSize);
+    presetUpButton.onClick = [this] { lcd.selectRelative (-1); };
+    presetDownButton.onClick = [this] { lcd.selectRelative (1); };
     addAndMakeVisible (presetUpButton);
     addAndMakeVisible (presetDownButton);
-    saveButton.setLabel ("SAVE");
     saveButton.onClick = [this]
     {
         juce::String initial;
@@ -157,11 +160,6 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
 
     // En FASE 2 solo se muestran los 12 knobs sobre el fondo vacío.
 
-    folderButton.setVisible (false);
-    saveButton.setVisible (false);
-    presetUpButton.setVisible (false);
-    presetDownButton.setVisible (false);
-    lcd.setVisible (false);
 
     setResizable (true, true);
     setResizeLimits (minimumWidth, minimumHeight, maximumWidth, maximumHeight);
@@ -261,6 +259,16 @@ void JunkyNoizeAudioProcessorEditor::resized()
                                            junky::layout::switchTrackCentreY - junky::layout::switchTrackHitHeight * 0.5f,
                                            junky::layout::switchTrackEndX - junky::layout::switchTrackStartX,
                                            junky::layout::switchTrackHitHeight));
+    lcd.setBounds (fromDesign (junky::layout::presetLcd.x(), junky::layout::presetLcd.y(),
+                               junky::layout::presetLcd.width, junky::layout::presetLcd.height));
+    presetUpButton.setBounds (fromDesign (junky::layout::presetUpButton.x(), junky::layout::presetUpButton.y(),
+                                          junky::layout::presetUpButton.width, junky::layout::presetUpButton.height));
+    presetDownButton.setBounds (fromDesign (junky::layout::presetDownButton.x(), junky::layout::presetDownButton.y(),
+                                            junky::layout::presetDownButton.width, junky::layout::presetDownButton.height));
+    saveButton.setBounds (fromDesign (junky::layout::presetSaveButton.x(), junky::layout::presetSaveButton.y(),
+                                      junky::layout::presetSaveButton.width, junky::layout::presetSaveButton.height));
+    folderButton.setBounds (fromDesign (junky::layout::presetFolderButton.x(), junky::layout::presetFolderButton.y(),
+                                        junky::layout::presetFolderButton.width, junky::layout::presetFolderButton.height));
     inputMeter.setBounds (fromDesign (junky::layout::inputMeter.x, junky::layout::inputMeter.y,
                                       junky::layout::inputMeter.width, junky::layout::inputMeter.height));
     outputMeter.setBounds (fromDesign (junky::layout::outputMeter.x, junky::layout::outputMeter.y,

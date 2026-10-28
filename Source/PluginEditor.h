@@ -7,7 +7,7 @@
 #include "ui/KnobLookAndFeel.h"
 #include "ui/LcdDisplay.h"
 #include "ui/LevelMeter.h"
-#include "ui/PanelButton.h"
+#include "ui/AssetButton.h"
 #include "ui/Phase3Controls.h"
 
 class JunkyNoizeAudioProcessorEditor : public juce::AudioProcessorEditor,
@@ -34,13 +34,13 @@ private:
     juce::Slider filterKnob, mixKnob, bassFreqKnob, inputKnob, outputKnob, drunkKnob;
     juce::Slider driveKnob, bitsKnob, rateKnob, aliasKnob, noiseKnob, characterKnob;
 
-    junky::PanelButton folderButton { junky::PanelButton::Style::folder, junky::theme::ledRed, junky::theme::ledGreen, false, 1007 };
-    junky::PanelButton saveButton { junky::PanelButton::Style::key, junky::theme::ledRed, junky::theme::ledGreen, false, 2011 };
+    junky::AssetButton folderButton;
+    junky::AssetButton saveButton;
     junky::ImageToggleButton bassButton;
     junky::ImageLed bassLed, monoLed, stereoLed;
     junky::MonoStereoLever monoStereoLever;
-    junky::PanelButton presetUpButton { junky::PanelButton::Style::arrowUp, junky::theme::ledRed, junky::theme::ledGreen, false, 6037 };
-    junky::PanelButton presetDownButton { junky::PanelButton::Style::arrowDown, junky::theme::ledRed, junky::theme::ledGreen, false, 6043 };
+    junky::AssetButton presetUpButton;
+    junky::AssetButton presetDownButton;
 
     junky::LcdDisplay lcd;
     junky::LevelMeter inputMeter, outputMeter;

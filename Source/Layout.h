@@ -35,6 +35,23 @@ inline constexpr ElementBounds bassButton { 146.0f, 661.0f, 62.0f, 62.0f };
 inline constexpr ElementBounds bassLed { 96.0f, 611.0f, 22.0f, 22.0f };
 inline constexpr ElementBounds monoLed { 139.0f, 783.0f, 22.0f, 22.0f };
 inline constexpr ElementBounds stereoLed { 302.0f, 783.0f, 22.0f, 22.0f };
+inline constexpr ElementBounds presetLcd { 776.5f, 124.0f, 417.0f, 128.0f };
+inline constexpr ElementBounds presetUpButton { 1098.0f, 83.0f, 84.0f, 70.0f };
+inline constexpr ElementBounds presetDownButton { 1098.0f, 163.0f, 84.0f, 68.0f };
+inline constexpr ElementBounds presetSaveButton { 1218.0f, 92.0f, 82.0f, 57.0f };
+inline constexpr ElementBounds presetFolderButton { 1218.0f, 172.0f, 82.0f, 57.0f };
+inline constexpr float presetLcdWidth = 417.0f;
+inline constexpr float presetLcdMargin = 10.0f;
+inline constexpr float presetLcdHeaderHeight = 16.0f;
+inline constexpr float presetLcdScrollWidth = 3.0f;
+inline constexpr float presetLcdScrollGap = 4.0f;
+inline constexpr float presetLcdTextInset = 2.0f;
+inline constexpr float presetLcdSelectionCorner = 1.5f;
+inline constexpr float presetLcdScanlineStart = 1.0f;
+inline constexpr float presetLcdScanlinePitch = 3.0f;
+inline constexpr float presetLcdScanlineHeight = 0.6f;
+inline constexpr float presetLcdGlowOffset = 0.5f;
+inline constexpr int presetLcdVisibleRows = 6;
 // Ventanas y columnas de los medidores (coordenadas del diseño 1618 x 972).
 struct MeterLayout
 {
