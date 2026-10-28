@@ -1,5 +1,4 @@
 #include "PluginEditor.h"
-#include "ui/Chassis.h"
 #include "ui/Theme.h"
 #include "Layout.h"
 #include "BinaryData.h"
@@ -66,7 +65,6 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     noiseKnob.setDoubleClickReturnValue (true, 0.0);
     characterKnob.setDoubleClickReturnValue (true, 1.0);
 
-    // Los controles de las fases posteriores permanecen ocultos.
     // BASS BOOST usa su parametro existente y empieza apagado.
     bassButton.setClickingTogglesState (true);
     bassAttachment = std::make_unique<juce::ButtonParameterAttachment> (*audioProcessor.apvts.getParameter (bassBoost), bassButton);
@@ -79,9 +77,9 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     addAndMakeVisible (bassButton);
     addAndMakeVisible (bassLed);
 
-    monoStereoLever.onToggle = [this] (bool isMono)
+    monoStereoLever.onToggle = [this] (bool selectedMono)
     {
-        audioProcessor.setParameterPlain (junky::params::mono, isMono ? 1.0f : 0.0f);
+        audioProcessor.setParameterPlain (junky::params::mono, selectedMono ? 1.0f : 0.0f);
     };
     addAndMakeVisible (monoStereoLever);
     addAndMakeVisible (monoLed);
@@ -190,7 +188,6 @@ void JunkyNoizeAudioProcessorEditor::setupKnob (juce::Slider& knob)
     knob.setRotaryParameters (juce::MathConstants<float>::pi * 1.25f, juce::MathConstants<float>::pi * 2.75f, true);
     knob.setPopupDisplayEnabled (true, true, this);
     knob.setLookAndFeel (&knobLook);
-    knob.getProperties().set ("wearSeed", nextKnobWearSeed++);
     addAndMakeVisible (knob);
 }
 

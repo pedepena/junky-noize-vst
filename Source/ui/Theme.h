@@ -11,33 +11,6 @@ namespace junky::theme
 inline constexpr float designWidth = 1618.0f;
 inline constexpr float designHeight = 972.0f;
 
-inline const juce::Colour metalLight { 0xffb9bbb7 };
-inline const juce::Colour metalMid { 0xff9a9c98 };
-inline const juce::Colour metalDark { 0xff5d5f5c };
-inline const juce::Colour ink { 0xff161616 };
-inline const juce::Colour rust { 0xff8c4a20 };
-inline const juce::Colour cream { 0xffd9d4bd };
-inline const juce::Colour presetArrow { 0xffd0cbbf };
-inline const juce::Colour lcdBackground { 0xff7fc46b };
-inline const juce::Colour lcdText { 0xff17240f };
-inline const juce::Colour ledRed { 0xffff3b2f };
-inline const juce::Colour ledGreen { 0xff62e06a };
-
-inline juce::Font panelFont (float height)
-{
-    return juce::Font (juce::FontOptions ("Arial", height, juce::Font::bold));
-}
-
-inline void drawPanelText (juce::Graphics& g, const juce::String& text,
-                           float centreX, float centreY, float height,
-                           juce::Justification justification = juce::Justification::centred)
-{
-    g.setColour (ink);
-    g.setFont (panelFont (height));
-    g.drawText (text, juce::Rectangle<float> (400.0f, height * 1.5f).withCentre ({ centreX, centreY }),
-                justification, false);
-}
-
 inline std::array<std::uint8_t, 7> bitmapGlyph (juce::juce_wchar character)
 {
     using Rows = std::array<std::uint8_t, 7>;

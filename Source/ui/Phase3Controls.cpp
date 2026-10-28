@@ -12,7 +12,7 @@ ImageToggleButton::ImageToggleButton()
 
 void ImageToggleButton::paintButton (juce::Graphics& g, bool, bool isButtonDown)
 {
-    const float scale = getWidth() / layout::bassButton.width;
+    const float scale = (float) getWidth() / layout::bassButton.width;
     auto bounds = getLocalBounds().toFloat();
     if (isButtonDown)
         bounds = bounds.reduced (layout::bassButtonPressInset * scale);
@@ -71,11 +71,11 @@ void MonoStereoLever::paint (juce::Graphics& g)
     if (! image.isValid())
         return;
 
-    const float scale = getWidth() / (layout::switchTrackEndX - layout::switchTrackStartX);
+    const float scale = (float) getWidth() / (layout::switchTrackEndX - layout::switchTrackStartX);
     const float leverWidth = layout::switchLeverWidth * scale;
     const float leverHeight = layout::switchLeverHeight * scale;
     const auto leverBounds = juce::Rectangle<float> (leverWidth, leverHeight)
-        .withCentre ({ currentCentreX * scale, getHeight() * 0.5f });
+        .withCentre ({ currentCentreX * scale, (float) getHeight() * 0.5f });
     g.drawImageWithin (image, juce::roundToInt (leverBounds.getX()), juce::roundToInt (leverBounds.getY()),
                        juce::roundToInt (leverBounds.getWidth()), juce::roundToInt (leverBounds.getHeight()),
                        juce::RectanglePlacement::centred);

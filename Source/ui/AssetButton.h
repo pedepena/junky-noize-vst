@@ -10,7 +10,7 @@ class AssetButton : public juce::Button
 public:
     explicit AssetButton() : juce::Button ({}) {}
 
-    void setImageData (const void* data, size_t size)
+    void setImageData (const void* data, int size)
     {
         image = juce::ImageCache::getFromMemory (data, size);
         repaint();

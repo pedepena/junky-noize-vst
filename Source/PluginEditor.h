@@ -27,8 +27,6 @@ private:
     juce::Rectangle<int> fromDesign (float x, float y, float w, float h) const;
 
     JunkyNoizeAudioProcessor& audioProcessor;
-    int nextKnobWearSeed = 100;
-
     junky::KnobLookAndFeel knobLook;
 
     juce::Slider filterKnob, mixKnob, bassFreqKnob, inputKnob, outputKnob, drunkKnob;

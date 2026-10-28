@@ -31,9 +31,11 @@ juce::Image createTrimmedKnobImage (const char* data, int dataSize)
 
     const int side = juce::jmax (right - left + 1, bottom - top + 1);
     const int cropX = juce::jlimit (0, source.getWidth() - side,
-                                    juce::roundToInt ((left + right + 1) * 0.5f - side * 0.5f));
+                                    juce::roundToInt (((float) left + (float) right + 1.0f) * 0.5f
+                                                      - (float) side * 0.5f));
     const int cropY = juce::jlimit (0, source.getHeight() - side,
-                                    juce::roundToInt ((top + bottom + 1) * 0.5f - side * 0.5f));
+                                    juce::roundToInt (((float) top + (float) bottom + 1.0f) * 0.5f
+                                                      - (float) side * 0.5f));
     return source.getClippedImage ({ cropX, cropY, side, side });
 }
 } // namespace

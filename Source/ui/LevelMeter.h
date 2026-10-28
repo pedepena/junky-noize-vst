@@ -24,7 +24,7 @@ public:
     {
         const auto id = getComponentID();
         const auto& meter = id == "output-meter" ? layout::outputMeter : layout::inputMeter;
-        const float scale = getWidth() / meter.width;
+        const float scale = (float) getWidth() / meter.width;
         const float leftX = (meter.leftColumnCentreX - meter.x - layout::meterSegmentWidth * 0.5f) * scale;
         const float rightX = (meter.rightColumnCentreX - meter.x - layout::meterSegmentWidth * 0.5f) * scale;
         const float width = layout::meterSegmentWidth * scale;
