@@ -35,6 +35,31 @@ inline constexpr ElementBounds bassButton { 146.0f, 661.0f, 62.0f, 62.0f };
 inline constexpr ElementBounds bassLed { 96.0f, 611.0f, 22.0f, 22.0f };
 inline constexpr ElementBounds monoLed { 139.0f, 783.0f, 22.0f, 22.0f };
 inline constexpr ElementBounds stereoLed { 302.0f, 783.0f, 22.0f, 22.0f };
+// Ventanas y columnas de los medidores (coordenadas del diseño 1618 x 972).
+struct MeterLayout
+{
+    float x;
+    float y;
+    float width;
+    float height;
+    float leftColumnCentreX;
+    float rightColumnCentreX;
+};
+inline constexpr MeterLayout inputMeter { 1306.0f, 478.0f, 71.0f, 221.0f, 1329.0f, 1354.0f };
+inline constexpr MeterLayout outputMeter { 1458.0f, 478.0f, 68.0f, 221.0f, 1479.0f, 1504.0f };
+inline constexpr float meterSegmentWidth = 20.0f;
+inline constexpr float meterSegmentHeight = 8.0f;
+inline constexpr float meterSegmentPitch = 10.0f;
+inline constexpr float meterTopInset = 6.0f;
+inline constexpr float meterBottomInset = 6.0f;
+inline constexpr float meterScaleTopY = 484.0f;
+inline constexpr float meterZeroDbY = 519.0f;
+inline constexpr float meterMinus6DbY = 560.0f;
+inline constexpr float meterMinus12DbY = 602.0f;
+inline constexpr float meterMinus24DbY = 645.0f;
+inline constexpr float meterMinus48DbY = 688.0f;
+inline constexpr float meterMinus60DbY = 699.0f;
+inline constexpr int meterSegmentCount = 21;
 inline constexpr float switchTrackStartX = 173.0f;
 inline constexpr float switchTrackEndX = 270.0f;
 inline constexpr float switchTrackCentreY = 779.0f;

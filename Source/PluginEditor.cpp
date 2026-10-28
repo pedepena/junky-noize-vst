@@ -162,8 +162,6 @@ JunkyNoizeAudioProcessorEditor::JunkyNoizeAudioProcessorEditor (JunkyNoizeAudioP
     presetUpButton.setVisible (false);
     presetDownButton.setVisible (false);
     lcd.setVisible (false);
-    inputMeter.setVisible (false);
-    outputMeter.setVisible (false);
 
     setResizable (true, true);
     setResizeLimits (minimumWidth, minimumHeight, maximumWidth, maximumHeight);
@@ -263,17 +261,28 @@ void JunkyNoizeAudioProcessorEditor::resized()
                                            junky::layout::switchTrackCentreY - junky::layout::switchTrackHitHeight * 0.5f,
                                            junky::layout::switchTrackEndX - junky::layout::switchTrackStartX,
                                            junky::layout::switchTrackHitHeight));
+    inputMeter.setBounds (fromDesign (junky::layout::inputMeter.x, junky::layout::inputMeter.y,
+                                      junky::layout::inputMeter.width, junky::layout::inputMeter.height));
+    outputMeter.setBounds (fromDesign (junky::layout::outputMeter.x, junky::layout::outputMeter.y,
+                                       junky::layout::outputMeter.width, junky::layout::outputMeter.height));
 }
 
 void JunkyNoizeAudioProcessorEditor::timerCallback()
 {
-    // Medidores: suben al instante y bajan poco a poco
     auto toDb = [] (float peak) { return juce::Decibels::gainToDecibels (peak, -100.0f); };
-
-    inputDisplayDb = juce::jmax (toDb (audioProcessor.takeInputPeak()), inputDisplayDb - 1.5f);
-    outputDisplayDb = juce::jmax (toDb (audioProcessor.takeOutputPeak()), outputDisplayDb - 1.5f);
-    inputMeter.setLevelDb (inputDisplayDb);
-    outputMeter.setLevelDb (outputDisplayDb);
+    constexpr float fallDbPerTick = 20.0f / 30.0f;
+    const float inputPeakDb = toDb (audioProcessor.takeInputPeak());
+    const float outputPeakDb = toDb (audioProcessor.takeOutputPeak());
+    inputDisplayDb = juce::jmax (inputPeakDb, inputDisplayDb - fallDbPerTick);
+    outputDisplayDb = juce::jmax (outputPeakDb, outputDisplayDb - fallDbPerTick);
+    if (inputDisplayDb > inputPeakHoldDb + 0.01f) { inputPeakHoldDb = inputDisplayDb; inputPeakHoldTicks = 18; }
+    else if (inputPeakHoldTicks > 0) --inputPeakHoldTicks;
+    else inputPeakHoldDb = juce::jmax (inputDisplayDb, inputPeakHoldDb - fallDbPerTick);
+    if (outputDisplayDb > outputPeakHoldDb + 0.01f) { outputPeakHoldDb = outputDisplayDb; outputPeakHoldTicks = 18; }
+    else if (outputPeakHoldTicks > 0) --outputPeakHoldTicks;
+    else outputPeakHoldDb = juce::jmax (outputDisplayDb, outputPeakHoldDb - fallDbPerTick);
+    inputMeter.setLevels (inputDisplayDb, inputPeakHoldDb);
+    outputMeter.setLevels (outputDisplayDb, outputPeakHoldDb);
 
     const bool bassBoostOn = audioProcessor.apvts.getRawParameterValue (junky::params::bassBoost)->load() > 0.5f;
     const bool isMono = audioProcessor.apvts.getRawParameterValue (junky::params::mono)->load() > 0.5f;

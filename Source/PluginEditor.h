@@ -47,6 +47,10 @@ private:
 
     float inputDisplayDb = -100.0f;
     float outputDisplayDb = -100.0f;
+    float inputPeakHoldDb = -100.0f;
+    float outputPeakHoldDb = -100.0f;
+    int inputPeakHoldTicks = 0;
+    int outputPeakHoldTicks = 0;
     int presetRefreshTicks = 0;
 
     juce::Image background;

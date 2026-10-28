@@ -2,69 +2,92 @@
 
 #include <cmath>
 #include <juce_gui_basics/juce_gui_basics.h>
-#include "Theme.h"
-#include "WearTexture.h"
+#include "../Layout.h"
 
 namespace junky
 {
-/** Medidor vertical de 15 segmentos con escala entre -42 y 0 dB. */
+/** Dos columnas de segmentos calibradas con la escala impresa del panel. */
 class LevelMeter : public juce::Component
 {
 public:
-    void setLevelDb (float newLevelDb)
+    void setLevels (float newLevelDb, float newPeakDb)
     {
-        if (std::abs (newLevelDb - levelDb) > 0.05f)
+        if (std::abs (newLevelDb - levelDb) > 0.01f || std::abs (newPeakDb - peakDb) > 0.01f)
         {
             levelDb = newLevelDb;
+            peakDb = newPeakDb;
             repaint();
         }
     }
 
     void paint (juce::Graphics& g) override
     {
-        const auto bounds = getLocalBounds().toFloat();
-        const auto bar = juce::Rectangle<float> (bounds.getX(), bounds.getY(), bounds.getWidth() * 0.38f,
-                                                 bounds.getHeight());
-        g.setColour (juce::Colour (0xff0e0e0e));
-        g.fillRoundedRectangle (bar, 3.0f);
-        constexpr int segments = 15;
-        const float segmentHeight = (bar.getHeight() - 6.0f) / (float) segments;
+        const auto id = getComponentID();
+        const auto& meter = id == "output-meter" ? layout::outputMeter : layout::inputMeter;
+        const float scale = getWidth() / meter.width;
+        const float leftX = (meter.leftColumnCentreX - meter.x - layout::meterSegmentWidth * 0.5f) * scale;
+        const float rightX = (meter.rightColumnCentreX - meter.x - layout::meterSegmentWidth * 0.5f) * scale;
+        const float width = layout::meterSegmentWidth * scale;
+        const float height = layout::meterSegmentHeight * scale;
+        const float pitch = layout::meterSegmentPitch * scale;
+        const float bottomCentre = (meter.height - layout::meterBottomInset - layout::meterSegmentHeight * 0.5f) * scale;
+        const float levelY = (dbToY (levelDb) - meter.y) * scale;
+        const float peakY = (dbToY (peakDb) - meter.y) * scale;
 
-        for (int i = 0; i < segments; ++i)
+        for (int i = 0; i < layout::meterSegmentCount; ++i)
         {
-            const float threshold = -42.0f + 3.0f * (float) i;
-            const bool on = levelDb >= threshold;
-            const auto colour = i >= 14 ? juce::Colour (0xffe03a2a)
-                              : i >= 12 ? juce::Colour (0xffe8802a)
-                              : i >= 9  ? juce::Colour (0xffe2c52c)
-                                        : juce::Colour (0xff43c24a);
-            const auto segment = juce::Rectangle<float> (bar.getX() + 3.0f,
-                bar.getBottom() - 3.0f - (float) (i + 1) * segmentHeight + 1.5f,
-                bar.getWidth() - 6.0f, segmentHeight - 3.0f);
-            g.setColour (on ? colour : colour.darker (1.4f).withAlpha (0.55f));
-            g.fillRect (segment);
-
-            if (i % 2 == 0)
+            const float centreY = bottomCentre - (float) i * pitch;
+            // Los segmentos apagados no se pintan. El fondo ya aporta su marca tenue.
+            if (centreY < levelY - height * 0.5f) continue;
+            const auto colour = colourForDb (yToDb (centreY / scale + meter.y));
+            const auto segment = juce::Rectangle<float> (0.0f, centreY - height * 0.5f, width, height);
+            for (const float x : { leftX, rightX })
             {
-                const juce::String text = juce::String ((int) threshold);
-                const juce::Rectangle<float> segmentBounds (bar.getX(),
-                    bar.getBottom() - 3.0f - (float) (i + 1) * segmentHeight,
-                    bounds.getWidth(), segmentHeight);
-                const float labelLeft = bar.getRight() + bounds.getWidth() * 0.06f;
-                theme::drawPanelText (g, text, labelLeft + 200.0f, segmentBounds.getCentreY(),
-                                      segmentHeight * 1.03f, juce::Justification::centredLeft);
+                g.setColour (colour.withAlpha (0.20f));
+                g.fillRoundedRectangle (segment.translated (x, 0.0f).expanded (1.5f * scale), 2.0f * scale);
+                g.setColour (colour);
+                g.fillRoundedRectangle (segment.translated (x, 0.0f), 1.5f * scale);
+                if (std::abs (centreY - peakY) <= layout::meterSegmentPitch * scale * 0.5f)
+                {
+                    g.setColour (juce::Colours::white.withAlpha (0.8f));
+                    g.fillRect (x, centreY - height * 0.5f, width, juce::jmax (1.0f, scale));
+                }
             }
-        }
-
-        // Rasguños suaves sobre el cristal, limitados a la barra para no apagar los LEDs.
-        {
-            juce::Graphics::ScopedSaveState wearState (g);
-            g.reduceClipRegion (bar.toNearestInt());
-            wear::draw (g, bar, wear::Surface::meter, getComponentID().hashCode());
         }
     }
 
 private:
+    static float dbToY (float db)
+    {
+        if (db >= 0.0f) return juce::jmax (layout::meterScaleTopY,
+            layout::meterZeroDbY - db * ((layout::meterMinus6DbY - layout::meterZeroDbY) / 6.0f));
+        if (db >= -6.0f) return juce::jmap (db, 0.0f, -6.0f, layout::meterZeroDbY, layout::meterMinus6DbY);
+        if (db >= -12.0f) return juce::jmap (db, -6.0f, -12.0f, layout::meterMinus6DbY, layout::meterMinus12DbY);
+        if (db >= -24.0f) return juce::jmap (db, -12.0f, -24.0f, layout::meterMinus12DbY, layout::meterMinus24DbY);
+        if (db >= -48.0f) return juce::jmap (db, -24.0f, -48.0f, layout::meterMinus24DbY, layout::meterMinus48DbY);
+        return juce::jmap (juce::jlimit (-60.0f, -48.0f, db), -48.0f, -60.0f,
+                           layout::meterMinus48DbY, layout::meterMinus60DbY);
+    }
+
+    static float yToDb (float y)
+    {
+        if (y <= layout::meterZeroDbY)
+            return (layout::meterZeroDbY - y) * (6.0f / (layout::meterMinus6DbY - layout::meterZeroDbY));
+        if (y <= layout::meterMinus6DbY) return juce::jmap (y, layout::meterZeroDbY, layout::meterMinus6DbY, 0.0f, -6.0f);
+        if (y <= layout::meterMinus12DbY) return juce::jmap (y, layout::meterMinus6DbY, layout::meterMinus12DbY, -6.0f, -12.0f);
+        if (y <= layout::meterMinus24DbY) return juce::jmap (y, layout::meterMinus12DbY, layout::meterMinus24DbY, -12.0f, -24.0f);
+        if (y <= layout::meterMinus48DbY) return juce::jmap (y, layout::meterMinus24DbY, layout::meterMinus48DbY, -24.0f, -48.0f);
+        return juce::jmap (y, layout::meterMinus48DbY, layout::meterMinus60DbY, -48.0f, -60.0f);
+    }
+
+    static juce::Colour colourForDb (float db)
+    {
+        if (db > -3.0f) return juce::Colour (0xffe0392b);
+        if (db >= -12.0f) return juce::Colour (0xffd6dc2a);
+        return juce::Colour (0xff3fd43c);
+    }
+
     float levelDb = -100.0f;
+    float peakDb = -100.0f;
 };
 } // namespace junky
