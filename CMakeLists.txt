@@ -16,9 +16,12 @@ FetchContent_MakeAvailable(JUCE)
 
 juce_add_binary_data(JunkyNoizeAssets SOURCES
     Source/ui/assets/background_empty.png
-    Source/ui/assets/knob_small.png
-    Source/ui/assets/knob_medium.png
-    Source/ui/assets/knob_large.png
+    Source/ui/assets/knob_small_base.png
+    Source/ui/assets/knob_small_cap.png
+    Source/ui/assets/knob_medium_base.png
+    Source/ui/assets/knob_medium_cap.png
+    Source/ui/assets/knob_large_base.png
+    Source/ui/assets/knob_large_cap.png
     Source/ui/assets/btn_bass.png
     Source/ui/assets/btn_up.png
     Source/ui/assets/btn_down.png
