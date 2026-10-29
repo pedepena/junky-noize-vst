@@ -51,7 +51,7 @@ inline constexpr float presetLcdScanlineStart = 1.0f;
 inline constexpr float presetLcdScanlinePitch = 3.0f;
 inline constexpr float presetLcdScanlineHeight = 0.6f;
 inline constexpr float presetLcdGlowOffset = 0.5f;
-inline constexpr int presetLcdVisibleRows = 6;
+inline constexpr int presetLcdVisibleRows = 4;
 // Ventanas y columnas de los medidores (coordenadas del diseño 1618 x 972).
 struct MeterLayout
 {

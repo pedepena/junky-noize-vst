@@ -1,6 +1,7 @@
 #include "LcdDisplay.h"
-#include "Theme.h"
 #include "../Layout.h"
+#include <array>
+#include <cstdint>
 
 namespace junky
 {
@@ -9,6 +10,81 @@ namespace
 const juce::Colour lcdText (0xff8fe07a);
 const juce::Colour lcdSelection (0xff8fe07a);
 const juce::Colour lcdSelectedText (0xff10200c);
+
+std::array<std::uint8_t, 7> glyphFor (juce::juce_wchar character)
+{
+    switch (juce::CharacterFunctions::toUpperCase (character))
+    {
+        case 'A': return { 14, 17, 17, 31, 17, 17, 17 };
+        case 'B': return { 30, 17, 17, 30, 17, 17, 30 };
+        case 'C': return { 14, 17, 16, 16, 16, 17, 14 };
+        case 'D': return { 30, 17, 17, 17, 17, 17, 30 };
+        case 'E': return { 31, 16, 16, 30, 16, 16, 31 };
+        case 'F': return { 31, 16, 16, 30, 16, 16, 16 };
+        case 'G': return { 14, 17, 16, 23, 17, 17, 15 };
+        case 'H': return { 17, 17, 17, 31, 17, 17, 17 };
+        case 'I': return { 14, 4, 4, 4, 4, 4, 14 };
+        case 'J': return { 7, 2, 2, 2, 2, 18, 12 };
+        case 'K': return { 17, 18, 20, 24, 20, 18, 17 };
+        case 'L': return { 16, 16, 16, 16, 16, 16, 31 };
+        case 'M': return { 17, 27, 21, 21, 17, 17, 17 };
+        case 'N': return { 17, 25, 21, 19, 17, 17, 17 };
+        case 'O': return { 14, 17, 17, 17, 17, 17, 14 };
+        case 'P': return { 30, 17, 17, 30, 16, 16, 16 };
+        case 'Q': return { 14, 17, 17, 17, 21, 18, 13 };
+        case 'R': return { 30, 17, 17, 30, 20, 18, 17 };
+        case 'S': return { 15, 16, 16, 14, 1, 1, 30 };
+        case 'T': return { 31, 4, 4, 4, 4, 4, 4 };
+        case 'U': return { 17, 17, 17, 17, 17, 17, 14 };
+        case 'V': return { 17, 17, 17, 17, 17, 10, 4 };
+        case 'W': return { 17, 17, 17, 21, 21, 21, 10 };
+        case 'X': return { 17, 17, 10, 4, 10, 17, 17 };
+        case 'Y': return { 17, 17, 10, 4, 4, 4, 4 };
+        case 'Z': return { 31, 1, 2, 4, 8, 16, 31 };
+        case '0': return { 14, 17, 19, 21, 25, 17, 14 };
+        case '1': return { 4, 12, 4, 4, 4, 4, 14 };
+        case '2': return { 14, 17, 1, 2, 4, 8, 31 };
+        case '3': return { 30, 1, 1, 14, 1, 1, 30 };
+        case '4': return { 2, 6, 10, 18, 31, 2, 2 };
+        case '5': return { 31, 16, 16, 30, 1, 1, 30 };
+        case '6': return { 14, 16, 16, 30, 17, 17, 14 };
+        case '7': return { 31, 1, 2, 4, 8, 8, 8 };
+        case '8': return { 14, 17, 17, 14, 17, 17, 14 };
+        case '9': return { 14, 17, 17, 15, 1, 1, 14 };
+        case '-': return { 0, 0, 0, 31, 0, 0, 0 };
+        case '_': return { 0, 0, 0, 0, 0, 0, 31 };
+        case '.': return { 0, 0, 0, 0, 0, 12, 12 };
+        case '/': return { 1, 2, 2, 4, 8, 8, 16 };
+        case '+': return { 0, 4, 4, 31, 4, 4, 0 };
+        case '#': return { 10, 31, 10, 10, 31, 10, 0 };
+        default:  return {};
+    }
+}
+
+void drawDotText (juce::Graphics& g, const juce::String& text, juce::Rectangle<float> area,
+                  juce::Colour colour)
+{
+    if (text.isEmpty() || area.isEmpty())
+        return;
+
+    const float unit = juce::jmin (area.getHeight() / 8.0f,
+                                   area.getWidth() / (6.0f * (float) text.length()));
+    const float dot = unit * 0.78f;
+    const float textWidth = unit * 6.0f * (float) text.length() - unit;
+    const float startX = area.getX() + (area.getWidth() - textWidth) * 0.5f;
+    const float startY = area.getY() + (area.getHeight() - unit * 7.0f) * 0.5f;
+
+    g.setColour (colour);
+    for (int characterIndex = 0; characterIndex < text.length(); ++characterIndex)
+    {
+        const auto glyph = glyphFor (text[characterIndex]);
+        for (int row = 0; row < 7; ++row)
+            for (int column = 0; column < 5; ++column)
+                if ((glyph[(size_t) row] & (1u << (4 - column))) != 0)
+                    g.fillRect (juce::Rectangle<float> (startX + (float) characterIndex * 6.0f * unit + (float) column * unit,
+                                                        startY + (float) row * unit, dot, dot));
+    }
+}
 }
 
 void LcdDisplay::setHeader (const juce::String& text, int durationMs)
@@ -93,10 +169,10 @@ void LcdDisplay::paint (juce::Graphics& g)
         trackX - layout::presetLcdScrollGap * scale, headerHeight);
     if (header.isNotEmpty())
     {
-        g.setColour (lcdText.withAlpha (0.26f));
-        theme::drawBitmapText (g, header, headerArea.translated (0.0f, layout::presetLcdGlowOffset * scale), headerHeight * 0.72f);
-        g.setColour (lcdText);
-        theme::drawBitmapText (g, header, headerArea, headerHeight * 0.72f);
+        drawDotText (g, header.toUpperCase(),
+                     headerArea.translated (0.0f, layout::presetLcdGlowOffset * scale),
+                     lcdText.withAlpha (0.26f));
+        drawDotText (g, header.toUpperCase(), headerArea, lcdText);
     }
 
     const float listY = margin + headerHeight;
@@ -132,11 +208,11 @@ void LcdDisplay::paint (juce::Graphics& g)
         const auto textArea = rowBounds.reduced (layout::presetLcdTextInset * scale, 0.0f);
         if (! isSelected)
         {
-            g.setColour (lcdText.withAlpha (0.18f));
-            theme::drawBitmapText (g, label, textArea.translated (0.0f, layout::presetLcdGlowOffset * scale), rowHeight * 0.76f);
+            drawDotText (g, label.toUpperCase(),
+                         textArea.translated (0.0f, layout::presetLcdGlowOffset * scale),
+                         lcdText.withAlpha (0.18f));
         }
-        g.setColour (isSelected ? lcdSelectedText : lcdText);
-        theme::drawBitmapText (g, label, textArea, rowHeight * 0.76f);
+        drawDotText (g, label.toUpperCase(), textArea, isSelected ? lcdSelectedText : lcdText);
     }
 }
 
