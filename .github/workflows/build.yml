@@ -61,8 +61,16 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          $vst3Path = Join-Path $PWD 'build/JunkyNoize_artefacts/Release/VST3/Junky Noize.vst3'
+          if (-not (Test-Path -LiteralPath $vst3Path -PathType Container)) {
+            throw "No se encontró el bundle VST3 esperado: $vst3Path"
+          }
+          $bannerPath = Join-Path $PWD 'installer/installer_banner.png'
+          if (-not (Test-Path -LiteralPath $bannerPath -PathType Leaf)) {
+            throw "No se encontró la imagen del instalador: $bannerPath"
+          }
           Add-Type -AssemblyName System.Drawing
-          $png = [System.Drawing.Image]::FromFile((Join-Path $PWD 'installer/installer_banner.png'))
+          $png = [System.Drawing.Image]::FromFile($bannerPath)
           try { $png.Save((Join-Path $PWD 'installer/installer_banner.bmp'), [System.Drawing.Imaging.ImageFormat]::Bmp) }
           finally { $png.Dispose() }
 
@@ -89,7 +97,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os == 'windows-latest' && 'JunkyNoize-Windows' || matrix.os == 'macos-latest' && 'JunkyNoize-macOS' || 'JunkyNoize-Linux' }}
-          path: installer/Output/*.exe
+          path: build/JunkyNoize_artefacts/Release/VST3/Junky Noize.vst3
           if-no-files-found: error
 
       - name: Subir instalador de Windows
@@ -97,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: JunkyNoize-Instalador
-          path: installer/Output/*.exe
+          path: installer/output/JunkyNoize-Setup.exe
           if-no-files-found: error
 
       - name: Subir paquete macOS
