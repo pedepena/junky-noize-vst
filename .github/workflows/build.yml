@@ -16,22 +16,12 @@ permissions:
 
 jobs:
   build:
-    name: ${{ matrix.name }}
-    if: matrix.os == 'windows-latest' || (github.event_name == 'workflow_dispatch' && inputs.todas_las_plataformas)
+    name: ${{ matrix.os == 'windows-latest' && 'Windows' || matrix.os == 'macos-latest' && 'macOS' || 'Linux' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: Windows
-            os: windows-latest
-            artifact: JunkyNoize-Windows
-          - name: macOS
-            os: macos-latest
-            artifact: JunkyNoize-macOS
-          - name: Linux
-            os: ubuntu-latest
-            artifact: JunkyNoize-Linux
+        os: ${{ (github.event_name == 'workflow_dispatch' && inputs.todas_las_plataformas) && fromJSON('["windows-latest","ubuntu-latest","macos-latest"]') || fromJSON('["windows-latest"]') }}
 
     steps:
       - name: Descargar el codigo
@@ -98,7 +88,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ matrix.os == 'windows-latest' && 'JunkyNoize-Windows' || matrix.os == 'macos-latest' && 'JunkyNoize-macOS' || 'JunkyNoize-Linux' }}
           path: installer/Output/*.exe
           if-no-files-found: error
 
@@ -114,7 +104,7 @@ jobs:
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ matrix.os == 'windows-latest' && 'JunkyNoize-Windows' || matrix.os == 'macos-latest' && 'JunkyNoize-macOS' || 'JunkyNoize-Linux' }}
           path: build/package/*.zip
           if-no-files-found: error
 
@@ -122,7 +112,7 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ matrix.os == 'windows-latest' && 'JunkyNoize-Windows' || matrix.os == 'macos-latest' && 'JunkyNoize-macOS' || 'JunkyNoize-Linux' }}
           path: build/package/*.tar.gz
           if-no-files-found: error
 
