@@ -62,7 +62,7 @@ std::array<std::uint8_t, 7> glyphFor (juce::juce_wchar character)
 }
 
 void drawDotText (juce::Graphics& g, const juce::String& text, juce::Rectangle<float> area,
-                  juce::Colour colour)
+                  juce::Colour colour, bool alignLeft = false)
 {
     if (text.isEmpty() || area.isEmpty())
         return;
@@ -71,7 +71,7 @@ void drawDotText (juce::Graphics& g, const juce::String& text, juce::Rectangle<f
                                    area.getWidth() / (6.0f * (float) text.length()));
     const float dot = unit * 0.78f;
     const float textWidth = unit * 6.0f * (float) text.length() - unit;
-    const float startX = area.getX() + (area.getWidth() - textWidth) * 0.5f;
+    const float startX = alignLeft ? area.getX() : area.getX() + (area.getWidth() - textWidth) * 0.5f;
     const float startY = area.getY() + (area.getHeight() - unit * 7.0f) * 0.5f;
 
     g.setColour (colour);
@@ -210,9 +210,9 @@ void LcdDisplay::paint (juce::Graphics& g)
         {
             drawDotText (g, label.toUpperCase(),
                          textArea.translated (0.0f, layout::presetLcdGlowOffset * scale),
-                         lcdText.withAlpha (0.18f));
+                         lcdText.withAlpha (0.18f), true);
         }
-        drawDotText (g, label.toUpperCase(), textArea, isSelected ? lcdSelectedText : lcdText);
+        drawDotText (g, label.toUpperCase(), textArea, isSelected ? lcdSelectedText : lcdText, true);
     }
 }
 
