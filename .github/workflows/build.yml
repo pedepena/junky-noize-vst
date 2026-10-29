@@ -3,9 +3,13 @@ name: Compilar Junky Noize
 on:
   push:
     tags: ["v*"]
-    branches: ["main"]
-  pull_request:
   workflow_dispatch:
+    inputs:
+      todas_las_plataformas:
+        description: "Compilar también para macOS y Linux"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -13,6 +17,7 @@ permissions:
 jobs:
   build:
     name: ${{ matrix.name }}
+    if: matrix.os == 'windows-latest' || (github.event_name == 'workflow_dispatch' && inputs.todas_las_plataformas)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -32,6 +37,12 @@ jobs:
       - name: Descargar el codigo
         uses: actions/checkout@v4
 
+      - name: Cache de fuentes JUCE
+        uses: actions/cache@v4
+        with:
+          path: .cache/FetchContent/juce-src
+          key: cmake-juce-source-${{ runner.os }}-juce-8.0.8
+
       - name: Instalar librerias de Linux
         if: runner.os == 'Linux'
         run: |
@@ -44,23 +55,35 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "macOS" ]; then
-            cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DFETCHCONTENT_BASE_DIR="$PWD/.cache/FetchContent"
           else
-            cmake -B build -DCMAKE_BUILD_TYPE=Release
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -DFETCHCONTENT_BASE_DIR="$PWD/.cache/FetchContent"
           fi
 
       - name: Compilar
         run: cmake --build build --config Release --parallel
 
-      - name: Crear instalador de Windows
+      - name: Instalar Inno Setup
+        if: runner.os == 'Windows'
+        run: choco install innosetup --no-progress -y
+
+      - name: Convertir banner y crear instalador
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $version = if ($env:GITHUB_REF_NAME -match '^v(.+)$') { $Matches[1] } else { '0.1.0' }
+          Add-Type -AssemblyName System.Drawing
+          $png = [System.Drawing.Image]::FromFile((Join-Path $PWD 'installer/installer_banner.png'))
+          try { $png.Save((Join-Path $PWD 'installer/installer_banner.bmp'), [System.Drawing.Imaging.ImageFormat]::Bmp) }
+          finally { $png.Dispose() }
+
+          $cmakeText = Get-Content CMakeLists.txt -Raw
+          if ($env:GITHUB_REF_NAME -match '^v(.+)$') { $version = $Matches[1] }
+          elseif ($cmakeText -match 'project\(JunkyNoize VERSION ([^)\s]+)') { $version = $Matches[1] }
+          else { $version = '1.0.0' }
           $isccCommand = Get-Command ISCC.exe -ErrorAction SilentlyContinue
           $isccPath = if ($isccCommand) { $isccCommand.Source } else { 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' }
           if (-not (Test-Path $isccPath)) { throw 'Inno Setup 6 (ISCC.exe) is not available on this runner.' }
-          & $isccPath /DPluginVersion=$version packaging/windows/JunkyNoize.iss
+          & $isccPath "/DPluginVersion=$version" installer/JunkyNoize.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Empaquetar macOS o Linux
@@ -71,12 +94,20 @@ jobs:
           if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then version="0.1.0"; fi
           bash packaging/package-unix.sh "$RUNNER_OS" "$version"
 
-      - name: Subir instalador de Windows
+      - name: Subir paquete Windows
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: packaging/windows/Output/*.exe
+          path: installer/Output/*.exe
+          if-no-files-found: error
+
+      - name: Subir instalador de Windows
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: JunkyNoize-Instalador
+          path: installer/Output/*.exe
           if-no-files-found: error
 
       - name: Subir paquete macOS
