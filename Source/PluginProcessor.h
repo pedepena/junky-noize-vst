@@ -84,7 +84,7 @@ private:
     std::atomic<float>* characterParam = nullptr;
 
     juce::SmoothedValue<float> inputGain, outputGain, mixAmount;
-    juce::SmoothedValue<float> driveAmount, noiseGain, drunkAmount;
+    juce::SmoothedValue<float> driveAmount, noiseGain, drunkAmount, aliasAmount;
 
     junky::Biquad lowPass, highShelf, bassShelf, aliasLowPass;
     junky::Biquad machineLowPass, machineLowShelf, machineHighShelf;
@@ -96,7 +96,7 @@ private:
     bool rateReducerOn = false;
     double currentSampleRate = 44100.0;
     float lastFilterValue = 999.0f, lastBassHz = -1.0f;
-    float lastRateValue = -1.0f, lastAliasValue = -1.0f;
+    float lastRateValue = -1.0f;
 
     std::atomic<int> currentPreset { 0 };
     mutable juce::CriticalSection userPresetLock;

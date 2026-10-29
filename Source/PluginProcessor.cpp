@@ -41,6 +41,7 @@ void JunkyNoizeAudioProcessor::prepareToPlay (double sampleRate, int)
     driveAmount.reset (sampleRate, 0.03);
     noiseGain.reset (sampleRate, 0.03);
     drunkAmount.reset (sampleRate, 0.1);
+    aliasAmount.reset (sampleRate, 0.03);
 
     inputGain.setCurrentAndTargetValue (juce::Decibels::decibelsToGain (inputParam->load()));
     outputGain.setCurrentAndTargetValue (juce::Decibels::decibelsToGain (outputParam->load()));
@@ -50,6 +51,7 @@ void JunkyNoizeAudioProcessor::prepareToPlay (double sampleRate, int)
     noiseGain.setCurrentAndTargetValue (initialNoise < 0.0005f ? 0.0f
         : juce::Decibels::decibelsToGain (-66.0f + 42.0f * initialNoise));
     drunkAmount.setCurrentAndTargetValue (drunkParam->load());
+    aliasAmount.setCurrentAndTargetValue (aliasParam->load());
 
     lowPass.reset();
     highShelf.reset();
@@ -64,7 +66,6 @@ void JunkyNoizeAudioProcessor::prepareToPlay (double sampleRate, int)
     lastFilterValue = 999.0f;
     lastBassHz = -1.0f;
     lastRateValue = -1.0f;
-    lastAliasValue = -1.0f;
     rateReducerOn = false;
     lastMachine = -2;
     lastCharacter = -1.0f;
@@ -147,7 +148,7 @@ void JunkyNoizeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     driveAmount.setTargetValue (driveParam->load());
 
     const float rateValue = rateParam->load();
-    const float aliasValue = aliasParam->load();
+    aliasAmount.setTargetValue (aliasParam->load());
     const float noiseValue = noiseParam->load();
     const float characterValue = characterParam->load();
     const int bitIndex = juce::jlimit (0, 3, static_cast<int> (std::lround (bitsParam->load())));
@@ -161,26 +162,30 @@ void JunkyNoizeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     const double rateHz = 48000.0 * std::pow (4000.0 / 48000.0, (double) rateValue);
     const double ratio = ! rateActive || rateHz >= currentSampleRate * 0.999
         ? 1.0 : rateHz / currentSampleRate;
-    if (rateValue != lastRateValue || aliasValue != lastAliasValue)
+    if (rateValue != lastRateValue)
     {
         const bool nextRateReducerOn = rateActive && ratio < 0.999;
         if (nextRateReducerOn && ! rateReducerOn)
             rateReducer.reset();
         rateReducerOn = nextRateReducerOn;
-        const bool wasAliasLowPassOn = aliasLowPassOn;
         aliasLowPassOn = rateReducerOn;
         if (aliasLowPassOn)
-        {
-            const double fcClean = 0.40 * rateHz;
-            const double fcGritty = juce::jmin (0.45 * currentSampleRate, 20000.0);
-            const double fcAlias = fcClean * std::pow (juce::jmax (fcGritty, fcClean) / fcClean,
-                                                       (double) aliasValue);
-            aliasLowPass.setLowPass (currentSampleRate, fcAlias);
-        }
-        if (wasAliasLowPassOn != aliasLowPassOn)
             aliasLowPass.reset();
         lastRateValue = rateValue;
-        lastAliasValue = aliasValue;
+    }
+
+    // El filtro acompaña la rampa suave de ALIAS. A 0.5 conserva el corte
+    // anterior; por debajo se cierra y por encima la señal filtrada se abre
+    // gradualmente hacia el sample-and-hold sin filtrar.
+    const float aliasAtBlockStart = aliasAmount.getCurrentValue();
+    if (aliasLowPassOn)
+    {
+        const double fcClean = 0.40 * rateHz;
+        const double fcGritty = juce::jmin (0.45 * currentSampleRate, 20000.0);
+        const double fcNeutral = fcClean * std::pow (juce::jmax (fcGritty, fcClean) / fcClean, 0.5);
+        const double filterPosition = juce::jmin ((double) aliasAtBlockStart, 0.5);
+        const double fcAlias = fcClean * std::pow (fcNeutral / fcClean, filterPosition / 0.5);
+        aliasLowPass.setLowPass (currentSampleRate, fcAlias);
     }
 
     updateFilters (filterParam->load(), bassBoostParam->load() > 0.5f, bassFreqParam->load());
@@ -202,6 +207,7 @@ void JunkyNoizeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         const float driveValue = driveAmount.getNextValue();
         const float noiseLevel = noiseGain.getNextValue();
         const float drunkValue = drunkAmount.getNextValue();
+        const float aliasValue = aliasAmount.getNextValue();
 
         float dry[2] = { 0.0f, 0.0f };
         float wet[2] = { 0.0f, 0.0f };
@@ -222,7 +228,12 @@ void JunkyNoizeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             inPeak = juce::jmax (inPeak, std::abs (dry[ch]));
             wet[ch] = junky::saturate (dry[ch], driveValue);
             if (aliasLowPassOn)
-                wet[ch] = aliasLowPass.process (ch, wet[ch]);
+            {
+                const float unfiltered = wet[ch];
+                const float filtered = aliasLowPass.process (ch, unfiltered);
+                const float grittyBlend = juce::jlimit (0.0f, 1.0f, (aliasValue - 0.5f) * 2.0f);
+                wet[ch] = filtered + grittyBlend * (unfiltered - filtered);
+            }
         }
 
         rateReducer.process (wet, numChannels, ratio);
