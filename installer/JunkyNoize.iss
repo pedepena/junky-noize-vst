@@ -8,6 +8,7 @@ AppId={{0C69A433-C568-4AEC-9A5D-6EC1B12D974A}
 AppName={#PluginName}
 AppVersion={#PluginVersion}
 AppPublisher=Junky Noize
+InfoBeforeFile=info_es.txt
 DefaultDirName={commoncf64}\VST3
 DisableDirPage=no
 DisableProgramGroupPage=yes
@@ -26,6 +27,9 @@ SolidCompression=yes
 WizardStyle=modern
 CloseApplications=force
 RestartApplications=no
+
+[Languages]
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Files]
 Source: "..\build\JunkyNoize_artefacts\Release\VST3\Junky Noize.vst3\*"; DestDir: "{app}\Junky Noize.vst3"; Flags: recursesubdirs createallsubdirs ignoreversion

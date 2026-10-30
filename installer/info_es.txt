@@ -1,0 +1,39 @@
+JUNKY NOIZE
+
+QUÉ ES
+Junky Noize es un efecto VST3 para dar sabor lo-fi a cualquier sonido.
+Se inspira en las máquinas de sampleo clásicas de los años 80 y 90.
+MBC, AKS, EMV, RLD, PS, ENS, KRG y CSO son homenajes con nombres propios; no son marcas reales.
+
+CÓMO SE HAN EMULADO LAS MÁQUINAS
+Cada preset combina profundidad de bits, frecuencia de muestreo, filtro, saturación, ruido y aliasing para acercarse al carácter de una máquina.
+Ese carácter está algo exagerado a propósito para que se note.
+Es una interpretación sonora, no una réplica exacta de circuitos físicos.
+
+CONTROLES
+FILTER: oscurece con valores negativos y aclara con valores positivos; el centro es neutro.
+MIX: mezcla la señal original con la señal procesada.
+DRUNK: añade variaciones de tiempo y afinación, como una cinta inestable.
+BITS: elige la resolución digital entre 16, 12, 8 y 4 bits.
+RATE: reduce la frecuencia de muestreo; en cero, la reducción queda apagada.
+DRIVE: añade saturación, de sutil a intensa.
+ALIAS: ajusta el suavizado y el aliasing; bajo suaviza y alto deja pasar más grano.
+NOISE: añade ruido de fondo.
+CHARACTER: ajusta cuánto colorea el sonido el perfil de la máquina seleccionada.
+BASS BOOST: activa un realce de graves.
+FREQ: elige la frecuencia del realce de graves, entre 20 y 500 Hz.
+MONO/STEREO: Mono suma los canales izquierdo y derecho; Stereo conserva los canales separados.
+INPUT: ajusta el nivel antes del efecto.
+OUTPUT: ajusta el nivel después del efecto.
+SAVE: guarda los ajustes actuales como un preset con nombre.
+BOTÓN DE CARPETA: abre la carpeta donde se guardan los presets del usuario.
+
+CONSEJOS RÁPIDOS
+En FL Studio, abre Mixer, elige un hueco de efectos y selecciona Junky Noize.
+Si no aparece, abre Options > Manage plugins y pulsa Find installed plugins para refrescar la lista y reescanear.
+Usa MIX para combinar el efecto con el sonido original.
+Vigila los medidores IN y OUT para controlar los niveles.
+
+CRÉDITOS
+Hecho con cariño por pedepena. Gratis y de código abierto.
+Repositorio: https://github.com/pedepena/junky-noize-vst

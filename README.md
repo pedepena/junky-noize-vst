@@ -1,49 +1,48 @@
 # Junky Noize
 
-Efecto de audio VST3 (y AU en macOS) con controles de entrada/salida, mezcla, filtro, realce de graves, mono/estéreo y presets de fábrica y de usuario con nombre. Los modelos de máquinas de sampleo están previstos para una fase posterior; todavía no forman parte del motor de audio.
+Efecto de audio VST3 para dar sabor lo-fi a cualquier sonido. Se inspira en las máquinas de sampleo clásicas de los años 80 y 90.
 
-## Descargar e instalar
+![Vista del panel de Junky Noize](Source/ui/assets/background_empty.png)
 
-Los archivos instalables se publican en **Releases** de GitHub cuando se crea una versión con una etiqueta `v*` (por ejemplo, `v0.1.0`). Descarga el archivo correspondiente a tu sistema operativo:
+## Qué hace
 
-- **Windows x64**: ejecuta `JunkyNoize-Setup-<version>-Windows-x64.exe` y sigue el asistente. El instalador copia el plugin a `C:\Program Files\Common Files\VST3\Junky Noize.vst3` y permite desinstalarlo desde Aplicaciones instaladas.
-- **macOS universal**: descomprime el ZIP. Copia `VST3/Junky Noize.vst3` a `~/Library/Audio/Plug-Ins/VST3/`. Opcionalmente, copia `AU/Junky Noize.component` a `~/Library/Audio/Plug-Ins/Components/` para instalar el formato AU.
-- **Linux x64**: descomprime el TAR.GZ y copia `VST3/Junky Noize.vst3` a `~/.vst3/`.
+Junky Noize combina reducción de bits y de frecuencia de muestreo, saturación, ruido, filtros y aliasing. Sus presets de máquinas son interpretaciones sonoras ajustadas para que cada carácter se note; no son réplicas exactas de circuitos.
 
-Crea la carpeta de destino si no existe y vuelve a escanear plugins en tu DAW. En FL Studio: **Options > Manage plugins > Find installed plugins**. En macOS, si Gatekeeper bloquea el plugin, permite su apertura desde **Ajustes del Sistema > Privacidad y seguridad**.
+**Los nombres de las máquinas son homenajes; no hay relación con las marcas originales.** MBC, AKS, EMV, RLD, PS, ENS, KRG y CSO son nombres propios del proyecto.
 
-### Probar una compilación antes de una Release
+## Instalación
 
-Cada ejecución correcta del flujo **Compilar Junky Noize** publica instaladores y paquetes temporales en la sección **Actions > ejecución > Artifacts**. Los archivos de **Releases** aparecen al publicar una etiqueta `v*`.
+Descarga **JunkyNoize-Setup.exe** desde [Releases](https://github.com/pedepena/junky-noize-vst/releases) y ejecuta el instalador. Elige la carpeta VST3 si quieres cambiar la ubicación sugerida. Después, vuelve a escanear los plugins en tu DAW.
 
-## Compilar desde el código fuente
+En FL Studio, abre **Mixer → un hueco de efectos → Junky Noize**. Si no aparece, ve a **Options → Manage plugins** y pulsa **Find installed plugins** para refrescar la lista y reescanear.
 
-Se requiere CMake 3.22 o superior y una cadena de herramientas C++ compatible. JUCE 8.0.8 se descarga automáticamente al configurar el proyecto. GitHub Actions compila Windows, macOS universal y Linux al subir cambios o solicitar una ejecución manual desde **Actions**.
+## Controles
 
-```sh
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release --parallel
-```
+| Control | Función |
+| --- | --- |
+| FILTER | Oscurece el sonido con valores negativos y lo aclara con valores positivos. |
+| MIX | Mezcla el sonido original con el procesado. |
+| DRUNK | Añade variaciones de tiempo y afinación, como una cinta inestable. |
+| BITS | Elige la resolución: 16, 12, 8 o 4 bits. |
+| RATE | Reduce la frecuencia de muestreo; en 0 queda desactivado. |
+| DRIVE | Añade saturación. |
+| ALIAS | Ajusta el suavizado y el aliasing: bajo suaviza, alto deja más grano. |
+| NOISE | Añade ruido de fondo. |
+| CHARACTER | Ajusta cuánto colorea el sonido el perfil de máquina seleccionado. |
+| BASS BOOST | Activa un realce de graves. |
+| FREQ | Elige la frecuencia del realce de graves, de 20 a 500 Hz. |
+| MONO / STEREO | Mono suma los canales; estéreo mantiene los canales separados. |
+| INPUT | Ajusta el nivel de entrada. |
+| OUTPUT | Ajusta el nivel de salida. |
+| SAVE | Guarda los ajustes actuales como preset con nombre. |
+| Botón de carpeta | Abre la carpeta de presets guardados por el usuario. |
 
-Para publicar instaladores: crea y sube una etiqueta versionada (por ejemplo, `v0.1.0`). Al terminar la compilación de las tres plataformas, GitHub crea una Release con los archivos listos para descargar.
+Usa **MIX** para equilibrar el efecto con el sonido original. Vigila los medidores **IN** y **OUT** para controlar los niveles.
 
-## Estructura
+## Créditos y licencia
 
-```
-JunkyNoize/
-├── CMakeLists.txt
-├── .github/workflows/build.yml
-├── packaging/
-│   ├── package-unix.sh
-│   └── windows/JunkyNoize.iss
-└── Source/
-    ├── PluginProcessor.h/.cpp
-    ├── PluginEditor.h/.cpp
-    ├── Parameters.h
-    ├── Presets.h
-    ├── dsp/
-    └── ui/
-```
+Hecho con cariño por pedepena. Gratis y de código abierto.
 
+Repositorio: [github.com/pedepena/junky-noize-vst](https://github.com/pedepena/junky-noize-vst)
 
-Los presets de usuario se guardan como archivos XML en la carpeta `Junky Noize/Presets` de los datos de usuario. El botón de carpeta de la interfaz abre esa ubicación; SAVE permite crear o reemplazar presets con nombre.
+El código de Junky Noize se distribuye bajo la licencia **GNU Affero General Public License, versión 3 (AGPL-3.0)**. Consulta [LICENSE](LICENSE). JUCE mantiene sus propios términos de licencia.
