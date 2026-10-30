@@ -20,11 +20,11 @@ En FL Studio, abre **Mixer → un hueco de efectos → Junky Noize**. Si no apar
 
 | Control | Función |
 | --- | --- |
-| FILTER | Oscurece el sonido con valores negativos y lo aclara con valores positivos. |
+| FILTER | Gira hacia DARK para oscurecer el sonido y hacia BRIGHT para aclararlo; el centro es neutro. |
 | MIX | Mezcla el sonido original con el procesado. |
 | DRUNK | Añade variaciones de tiempo y afinación, como una cinta inestable. |
 | BITS | Elige la resolución: 16, 12, 8 o 4 bits. |
-| RATE | Reduce la frecuencia de muestreo; en 0 queda desactivado. |
+| RATE | Reduce la frecuencia de muestreo, de 48k (limpio, sin reducción) hasta 4k (muy sucio). |
 | DRIVE | Añade saturación. |
 | ALIAS | Ajusta el suavizado y el aliasing: bajo suaviza, alto deja más grano. |
 | NOISE | Añade ruido de fondo. |

@@ -11,11 +11,11 @@ Ese carácter está algo exagerado a propósito para que se note.
 Es una interpretación sonora, no una réplica exacta de circuitos físicos.
 
 CONTROLES
-FILTER: oscurece con valores negativos y aclara con valores positivos; el centro es neutro.
+FILTER: Gira hacia DARK para oscurecer el sonido y hacia BRIGHT para aclararlo; el centro es neutro.
 MIX: mezcla la señal original con la señal procesada.
 DRUNK: añade variaciones de tiempo y afinación, como una cinta inestable.
 BITS: elige la resolución digital entre 16, 12, 8 y 4 bits.
-RATE: reduce la frecuencia de muestreo; en cero, la reducción queda apagada.
+RATE: Reduce la frecuencia de muestreo, de 48k (limpio, sin reducción) hasta 4k (muy sucio).
 DRIVE: añade saturación, de sutil a intensa.
 ALIAS: ajusta el suavizado y el aliasing; bajo suaviza y alto deja pasar más grano.
 NOISE: añade ruido de fondo.
